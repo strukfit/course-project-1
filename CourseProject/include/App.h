@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "GUI.h"
 #include <iostream>
 
-// TODO: Reference additional headers your program requires here.
+class App : public wxApp
+{
+public:
+	virtual bool OnInit();
+};
