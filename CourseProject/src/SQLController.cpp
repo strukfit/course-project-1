@@ -1,10 +1,12 @@
 #include "SQLController.h"
 
+using namespace std::string_literals;
+
 SQLController::SQLController() :
     db(nullptr),
-    dbIsEmptyFlag(true),
     dbOpeningError(""),
-    sqlExecutionError("")
+    sqlExecutionError(""),
+    sqlPreparationError("")
 {
 
 }
@@ -17,17 +19,7 @@ SQLController::~SQLController()
     }
 }
 
-void SQLController::setDbIsEmptyFlag(bool flag)
-{
-    dbIsEmptyFlag = flag;
-}
-
-bool SQLController::dbIsEmpty()
-{
-    return dbIsEmptyFlag;
-}
-
-void SQLController::openDB(const char* filename)
+void SQLController::OpenDB(const char* filename)
 {
     if (sqlite3_open(filename, &db))
     {
@@ -36,7 +28,7 @@ void SQLController::openDB(const char* filename)
     }
 }
 
-void SQLController::executeSQL(const char* sql)
+void SQLController::ExecuteSQL(const char* sql)
 {
     char* errMsg = 0;
 
@@ -48,9 +40,9 @@ void SQLController::executeSQL(const char* sql)
     }
 }
 
-void SQLController::databaseInit()
+void SQLController::DatabaseInit()
 {
-    executeSQL(R"(
+    ExecuteSQL(R"(
         CREATE TABLE IF NOT EXISTS Manufacturers (
             ManufacturerID INTEGER PRIMARY KEY AUTOINCREMENT,
             Name VARCHAR(255) UNIQUE,
@@ -88,9 +80,24 @@ void SQLController::databaseInit()
     }*/
 }
 
+sqlite3_stmt* SQLController::SelectData(const char* tableName)
+{
+    std::string selectData = ("SELECT * FROM "s + tableName).c_str();
+    sqlite3_stmt* stmt;
+
+    if (sqlite3_prepare_v2(db, selectData.c_str(), -1, &stmt, 0) != SQLITE_OK)
+    {
+        std::string error = "Error in preparation of SQL query: "s + sqlite3_errmsg(db);
+        sqlPreparationError = error.c_str();
+        throw(sqlPreparationError);
+    }
+    
+    return stmt;
+}
+
 void SQLController::Test()
 {
-    executeSQL(R"(
+    ExecuteSQL(R"(
         INSERT OR IGNORE INTO Manufacturers (Name, CountryOfOrigin, ContactInfo)
         VALUES
             ('Samsung', 'South Korea', 'www.samsung.com/contact'),

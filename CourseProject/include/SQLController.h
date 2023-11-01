@@ -6,46 +6,41 @@
 class SQLController
 {
     sqlite3* db; // Database
-    
-    bool dbIsEmptyFlag;
 
     Exception dbOpeningError;
     Exception sqlExecutionError;
+    Exception sqlPreparationError;
 
 public:
     SQLController();
 
     ~SQLController();
 
-    void setDbIsEmptyFlag(bool flag);
-
-    bool dbIsEmpty();
-
     /// <summary>
     /// Creates and opens database
     /// </summary>
     /// <param name="name - database name"></param>
-    void openDB(const char* name);
+    void OpenDB(const char* name);
 
     /// <summary>
     /// The function executes an SQL query
     /// </summary>
     /// <param name="sql - SQL statement"></param>
     /// <returns></returns>
-    void executeSQL(const char* sql);
+    void ExecuteSQL(const char* sql);
 
     /// <summary>
-    /// 
+    /// Database initialization
     /// </summary>
-    void databaseInit();
+    void DatabaseInit();
 
-    void createData();
+    void CreateData();
 
-    void deleteData(); 
+    void DeleteData(); 
 
-    void updateData();
+    void UpdateData();
 
-    void selectData();
+    sqlite3_stmt* SelectData(const char* tableName);
 
     void Test();
 };
