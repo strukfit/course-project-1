@@ -22,6 +22,10 @@ public:
 	
 	static void MainFrame(wxFrame* mainFrame);
 
-	static void ErrorFrame(wxFrame* mainFrame, const char* errorName);
+	static void ErrorFrame(const char* errorName);
+
+	static void addDataFrame(wxFrame* mainFrame);
+
+	static void confirmationFrame(wxFrame* mainFrame);
 
 };

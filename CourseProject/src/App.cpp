@@ -9,5 +9,6 @@ wxIMPLEMENT_APP(App);
 bool App::OnInit()
 {
 	MainWindow mainWindow;
+	
 	return true;
 }
