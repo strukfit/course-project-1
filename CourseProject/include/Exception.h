@@ -4,10 +4,10 @@
 
 class Exception : public std::exception
 {
-	const char* message;
+	std::string message;
 
 public:
-	Exception(const char* msg);
+	Exception(std::string msg);
 
-	const char* what();
+	std::string what();
 };

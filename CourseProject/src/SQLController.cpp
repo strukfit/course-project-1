@@ -3,10 +3,7 @@
 using namespace std::string_literals;
 
 SQLController::SQLController() :
-    db(nullptr),
-    dbOpeningError(""),
-    sqlExecutionError(""),
-    sqlPreparationError("")
+    db(nullptr)
 {
 
 }
@@ -23,21 +20,33 @@ void SQLController::OpenDB(const char* filename)
 {
     if (sqlite3_open(filename, &db))
     {
-        dbOpeningError = ("Can't open database: %s\n", sqlite3_errmsg(db));
-        throw(dbOpeningError);
+        throw(Exception("Can't open database: "s + sqlite3_errmsg(db)));
     }
 }
 
 void SQLController::ExecuteSQL(const char* sql)
 {
+    sqlite3_stmt* stmt;
+
     char* errMsg = 0;
 
     if (sqlite3_exec(db, sql, 0, 0, &errMsg) != SQLITE_OK) {
 
-        sqlExecutionError = ("Error when executing SQL query: %s", errMsg);
-        throw(sqlExecutionError);
+        throw(Exception("Error when executing SQL query: "s + errMsg));
         sqlite3_free(errMsg);
     }
+}
+
+sqlite3_stmt* SQLController::PrepareSQL(const char* sql)
+{
+    sqlite3_stmt* stmt;
+    // Preparing SQL statement(compilation into a byte-code program) 
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) != SQLITE_OK)
+    {
+        throw(Exception("Error in preparation of SQL query: "s + sqlite3_errmsg(db)));
+    }
+
+    return stmt;
 }
 
 void SQLController::DatabaseInit()
@@ -82,17 +91,9 @@ void SQLController::DatabaseInit()
 
 sqlite3_stmt* SQLController::SelectData(const char* tableName)
 {
-    std::string selectData = ("SELECT * FROM "s + tableName).c_str();
-    sqlite3_stmt* stmt;
-
-    if (sqlite3_prepare_v2(db, selectData.c_str(), -1, &stmt, 0) != SQLITE_OK)
-    {
-        std::string error = "Error in preparation of SQL query: "s + sqlite3_errmsg(db);
-        sqlPreparationError = error.c_str();
-        throw(sqlPreparationError);
-    }
+    std::string selectData = "SELECT * FROM "s + tableName;
     
-    return stmt;
+    return PrepareSQL(selectData.c_str());
 }
 
 void SQLController::Test()

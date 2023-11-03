@@ -1,12 +1,12 @@
 #include "Exception.h"
 
-Exception::Exception(const char* msg):
+Exception::Exception(std::string msg):
 	message(msg)
 {
 
 }
 
-const char* Exception::what()
+std::string Exception::what()
 {
 	return message;
 }

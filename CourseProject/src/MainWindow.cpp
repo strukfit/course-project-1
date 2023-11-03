@@ -2,21 +2,21 @@
 
 //using namespace std::string_literals;
 MainWindow::MainWindow():
-	mainWindow(new wxFrame(nullptr, wxID_ANY, "Window", wxPoint(50, 50), wxSize(800, 600)))
+	mainWindow(new wxFrame(nullptr, wxID_ANY, "Window", wxPoint(50, 50), wxSize(900, 550)))
 {
-	GUI::MainFrame(mainWindow);
-
-	SQLController sqlController;
+	SQLController* sqlController = new SQLController;
 	try
 	{
-		sqlController.OpenDB("database.db");
-		sqlController.DatabaseInit();
-		GUI::ShowTable(sqlController, "Products");
+		sqlController->OpenDB("database.db");
+		sqlController->DatabaseInit();
+		GUI::MainWindow(mainWindow, sqlController);
+		GUI::TablesInit(sqlController);
+		//GUI::TableInit();
 		//wxLogStatus();
 	}
 	catch (Exception exc)
 	{
-		wxLogError(exc.what());
+		wxLogError(exc.what().c_str());
 	}
 }
 
