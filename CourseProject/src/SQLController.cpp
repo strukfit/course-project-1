@@ -96,6 +96,13 @@ sqlite3_stmt* SQLController::SelectData(const char* tableName)
     return PrepareSQL(selectData.c_str());
 }
 
+sqlite3_stmt* SQLController::SelectData(const char* tableName, std::string columns)
+{
+    std::string selectData = "SELECT "s + columns + "FROM " + tableName;
+
+    return PrepareSQL(selectData.c_str());
+}
+
 void SQLController::Test()
 {
     ExecuteSQL(R"(

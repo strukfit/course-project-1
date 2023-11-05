@@ -1,15 +1,14 @@
 #include "MainWindow.h"
 
-//using namespace std::string_literals;
 MainWindow::MainWindow():
-	mainWindow(new wxFrame(nullptr, wxID_ANY, "Household Appliances Store", wxPoint(50, 50), wxSize(900, 550)))
+	mainWindow(new wxFrame(nullptr, wxID_ANY, "Household Appliances Store", wxPoint(50, 50), wxSize(900, 550), wxDEFAULT_FRAME_STYLE &~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)))
 {
 	SQLController* sqlController = new SQLController;
 	try
 	{
 		sqlController->OpenDB("database.db");
 		sqlController->DatabaseInit();
-		GUI::MainWindow(mainWindow, sqlController);
+		GUI::MainWindowInit(mainWindow, sqlController);
 		//wxLogStatus();
 	}
 	catch (Exception exc)

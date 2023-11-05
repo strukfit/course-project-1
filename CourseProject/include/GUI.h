@@ -12,21 +12,48 @@
 /// </summary>
 class GUI : public wxFrame
 {	
+
+	static void AddDataWindow(wxFrame* mainWindow);
+
 	/// <summary>
-	/// Handling an event when a button is clicked
+	/// Tables initialization. Creating and hiding visual tables 
 	/// </summary>
-	/// <param name="event"></param>
-	static void OnButtonClicked(wxCommandEvent& event);
+	/// <param name="tableName"></param>
+	static void TableInit(const char* tableName);
+
+	/// <summary>
+	/// Table update
+	/// </summary>
+	/// <param name="tableName"></param>
+	static void UpdateTable(const char* tableName, std::string columns);
+
+	/// <summary>
+	/// Handling an event when a checkbox is clicked
+	/// </summary>
+	/// <param name="event - event for handling"></param>
+	static void OnCheckBoxToggled(wxCommandEvent& event);
+
+	/// <summary>
+	/// Handling an event when a check all checkboxes button is clicked
+	/// </summary>
+	/// <param name="event - event for handling"></param>
+	static void OnCheckAllButtonClicked(wxCommandEvent& event);
 
 	/// <summary>
 	/// Handling an event when a listbox string(table name) is selected
 	/// </summary>
-	/// <param name="event"></param>
+	/// <param name="event - event for handling"></param>
 	static void OnListBoxSelect(wxCommandEvent& event);
+
+	static SQLController* sqlController;
 
 	static wxPanel* panel; // A panel(A window on which controls are placed)
 	
 	static wxListBox* tableslistBox; // A tableListBox is used to select one of a list of table names.
+
+	static wxString selectedTable; // Stores the name of the selected table 
+
+	static std::string checkedColumns; // Stores all checked columns of the selected table 
 
 	/// <summary>
 	/// Sorted associative container that contains wxListCtrl* table and its unique key(table name)
@@ -44,14 +71,7 @@ public:
 	/// Initializing the GUI of the main window
 	/// </summary>
 	/// <param name="mainWindow - main window(wxFrame class object)"></param>
-	static void MainWindow(wxFrame* mainWindow, SQLController* sqlController);
-
-	static void AddDataWindow(wxFrame* mainWindow);
-
-	/// <summary>
-	/// Tables initialization. Creating and hiding visual tables 
-	/// </summary>
 	/// <param name="sqlController"></param>
-	static void TableInit(SQLController* sqlController, sqlite3_stmt* stmt, const char* tableName);
+	static void MainWindowInit(wxFrame* mainWindow, SQLController* sqlController);
 
 };

@@ -1,5 +1,7 @@
 #include "GUI.h"
 
+SQLController* GUI::sqlController;
+
 wxPanel* GUI::panel;
 
 wxListBox* GUI::tableslistBox;
@@ -8,10 +10,17 @@ std::map<wxString, wxListCtrl*> GUI::tables;
 
 std::map<wxString, wxCheckListBox*> GUI::checkBoxes;
 
+wxString GUI::selectedTable;
+
+std::string GUI::checkedColumns = "*";
+
 using namespace std::string_literals;
 
-void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
+void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
 {
+
+    sqlController = sql;
+
     /*
     *   Binding the main window(mainWindow) with event processing.
     *   When closing the window, a confirmation window opens
@@ -61,11 +70,6 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
 	panel = new wxPanel(mainWindow, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
 	panel->SetBackgroundColour(wxColour(43, 43, 43, 255));
 
-    /*wxButton* button = new wxButton(panel, wxID_ANY, "Create DB", wxPoint(0, 0), wxSize(200, 50));
-    button->SetBackgroundColour(wxColor(55, 55, 55, 255));
-    button->SetForegroundColour(wxColor(*wxWHITE));
-    button->Bind(wxEVT_BUTTON, &GUI::OnButtonClicked);*/
-
     tableslistBox = new wxListBox(panel, wxID_ANY, wxPoint(0, 40), wxSize(125, 50));
     
     // Getting all table names from database
@@ -83,7 +87,6 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
         // Getting column names from the table
         sqlite3_stmt* stmt1 = sqlController->PrepareSQL(("SELECT name FROM pragma_table_info(\'"s + tableName + "\')").c_str());
 
-        int yy = 100;
         wxCheckListBox* checkListBox = new wxCheckListBox(panel, wxID_ANY, wxPoint(10, 100), wxSize(115, 150));
 
         // Creating checkboxes of column names
@@ -93,10 +96,12 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
             checkListBox->Check(checkListBox->Append((char*)sqlite3_column_text(stmt1, 0)));
 
             // Creating and adding visual table to the map
-            GUI::TableInit(sqlController, stmt1, tableName);
+            GUI::TableInit(tableName);
         }
 
         checkListBox->Hide();
+
+        checkListBox->Bind(wxEVT_COMMAND_CHECKLISTBOX_TOGGLED, &GUI::OnCheckBoxToggled);
 
         // Insert checkbox and table name into the map
         checkBoxes.insert(std::make_pair(tableName, checkListBox));
@@ -114,45 +119,60 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
     // Selecting the first table in tablesListBox
     tableslistBox->Select(0);
 
+    // Storing selected table name
+    selectedTable = tableslistBox->GetString(0);
+
     // Showing the first table
     tables.begin()->second->Show();
     
     // Showing the the first table checkboxes
     checkBoxes.begin()->second->Show();
 
+    // Creating button that check all checkboxes
+    wxButton* checkAllButton = new wxButton(panel, wxID_ANY, "Check all", wxPoint(20, 260), wxSize(95, 25));
+    checkAllButton->Bind(wxEVT_BUTTON, &GUI::OnCheckAllButtonClicked);
+    
+    // Creating update table button and handling event function
+    wxButton* updateTableButton = new wxButton(panel, wxID_ANY, "Update Table", wxPoint(145, 10), wxSize(100, 25));
+    updateTableButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event)
+        {
+            GUI::UpdateTable(selectedTable, checkedColumns);
+        }
+    );
+    
     mainWindow->CreateStatusBar();
 
     mainWindow->Show();
 }
 
-void GUI::TableInit(SQLController* sqlController, sqlite3_stmt* stmt, const char* tableName)
+void GUI::TableInit(const char* tableName)
 {
     // Creating visual table
     wxListCtrl* table = new wxListCtrl(panel, wxID_ANY, wxPoint(140, 40), wxSize(700, 300), wxLC_REPORT);
 
     // Selecting table from database
-    sqlite3_stmt* stmt1 = sqlController->SelectData(tableName);
+    sqlite3_stmt* stmt = sqlController->SelectData(tableName);
 
     // Adding column names to a table
-    for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
-        table->AppendColumn((char*)sqlite3_column_name(stmt1, i));
+    for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+        table->AppendColumn((char*)sqlite3_column_name(stmt, i));
     }
-        
+    
     // Populating a table with database data
-    while (sqlite3_step(stmt1) == SQLITE_ROW) {
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
         // Table row id
-        int id = sqlite3_column_int(stmt1, 0);
+        int id = sqlite3_column_int(stmt, 0);
 
         // Adding a new row to a table
         long index = table->InsertItem(table->GetItemCount(), wxString::Format("%d", id));
-        for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
-            const char* data = (char*)sqlite3_column_text(stmt1, i);
+        for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+            const char* data = (char*)sqlite3_column_text(stmt, i);
             table->SetItem(index, i, data);
         }
     }
 
     // Release resources associated with a prepared stmt SQL query
-    sqlite3_finalize(stmt1);
+    sqlite3_finalize(stmt);
 
     table->SetBackgroundColour(wxColor(31, 31, 31, 255));
     table->SetTextColour(wxColor(255, 255, 255, 255));
@@ -163,9 +183,80 @@ void GUI::TableInit(SQLController* sqlController, sqlite3_stmt* stmt, const char
     tables.insert(std::make_pair(tableName, table));
 }
 
-void GUI::OnButtonClicked(wxCommandEvent& event)
+void GUI::UpdateTable(const char* tableName, std::string columns)
 {
-	
+    wxListCtrl* table = tables.at(tableName);
+
+    table->DeleteAllColumns();
+    table->DeleteAllItems();
+
+    // Selecting table from database
+    sqlite3_stmt* stmt = sqlController->SelectData(tableName);
+
+    // Adding column names to a table
+    for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+        table->AppendColumn((char*)sqlite3_column_name(stmt, i));
+    }
+
+    // Populating a table with database data
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        // Table row id
+        int id = sqlite3_column_int(stmt, 0);
+
+        // Adding a new row to a table
+        long index = table->InsertItem(table->GetItemCount(), wxString::Format("%d", id));
+        for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+            const char* data = (char*)sqlite3_column_text(stmt, i);
+            table->SetItem(index, i, data);
+        }
+    }
+
+    // Release resources associated with a prepared stmt SQL query
+    sqlite3_finalize(stmt);
+}
+
+void GUI::OnCheckBoxToggled(wxCommandEvent& event)
+{
+    ///*wxArrayInt checkedItems;
+    //wxCheckListBox* checkListBox = checkBoxes.at(selectedTable);
+    //checkListBox->GetCheckedItems(checkedItems);
+    //
+    //checkedColumns = "";
+
+    //for (auto id : checkedItems)
+    //{
+    //    checkedColumns += checkListBox->GetString(id);
+    //    checkedColumns += ", ";
+    //}*/
+    ////UpdateTable(selectedTable, checkedColumns);
+    //
+    ////wxString columnName = checkBoxes.at(selectedTable)->GetString(event.GetId());
+    //wxListCtrl* table = tables.at(selectedTable);
+    ////for (int i = 0; i < table->GetColumnCount(); i++)
+    ////{
+    ////    //if (table->GetColumn(i))
+    ////    wxListItem listItem;
+    ////    listItem.SetId(i);
+    ////    table->GetColumn(i, listItem);
+    ////    wxString name = listItem.GetText();
+    ////    wxLogStatus(name);
+    ////}
+
+    //wxListItem* listItem = new wxListItem;
+    //listItem->SetId(0);
+    //table->GetColumn(0, *listItem);
+    //wxString name = listItem->GetText();
+    //wxLogStatus(name);
+    
+}
+
+void GUI::OnCheckAllButtonClicked(wxCommandEvent& event)
+{
+    wxCheckListBox* checkListBox = checkBoxes.at(selectedTable);
+    for (int i = 0; i < checkListBox->GetCount(); i++)
+    {
+        checkListBox->Check(i);
+    }
 }
 
 void GUI::OnListBoxSelect(wxCommandEvent& event)
@@ -173,12 +264,12 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
     // Getting an id of the selected table name in the listbox
     int id = tableslistBox->GetSelection();
 
-    wxString tableName = tableslistBox->GetString(id);
+    selectedTable = tableslistBox->GetString(id);
 
     // Showing a selected table and hiding another
     for (auto it = tables.begin(); it != tables.end(); it++)
     {
-        if (it->first == tableName)
+        if (it->first == selectedTable)
         {
             it->second->Show();
         }
@@ -191,7 +282,7 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
     // Showing checkboxes from a selected table and hiding another
     for (auto it = checkBoxes.begin(); it != checkBoxes.end(); it++)
     {
-        if (it->first == tableName)
+        if (it->first == selectedTable)
         {
             it->second->Show();
         }
