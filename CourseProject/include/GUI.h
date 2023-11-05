@@ -29,6 +29,8 @@ class GUI : public wxFrame
 	/// </summary>
 	static std::map<wxString, wxListCtrl*> tables;
 
+	static std::map<wxString, wxCheckBox*> checkBoxes;
+
 public: 
 	
 	/// <summary>
@@ -42,10 +44,15 @@ public:
 	static void ConfirmationWindow(wxFrame* mainWindow);
 
 	/// <summary>
-	/// Creating and displaying a table from database data
+	/// Tables initialization. Creating and hiding visual tables 
 	/// </summary>
 	/// <param name="sqlController"></param>
-	/// <param name="tableName"></param>
 	static void TablesInit(SQLController* sqlController);
+
+	/// <summary>
+	/// Checkboxes initialization. Creating and hiding visual checkboxes 
+	/// </summary>
+	/// <param name="sqlController"></param>
+	static void CheckBoxesInit(SQLController* sqlController);
 
 };

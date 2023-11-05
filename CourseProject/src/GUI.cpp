@@ -6,6 +6,8 @@ wxListBox* GUI::tableslistBox;
 
 std::map<wxString, wxListCtrl*> GUI::tables;
 
+std::map<wxString, wxCheckBox*> GUI::checkBoxes;
+
 using namespace std::string_literals;
 
 void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
@@ -101,6 +103,8 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
     tableslistBox->SetForegroundColour(wxColor(*wxWHITE));
 
     tableslistBox->Select(0);
+
+    GUI::TablesInit(sqlController);
     
     mainWindow->CreateStatusBar();
 
@@ -127,7 +131,7 @@ void GUI::TablesInit(SQLController* sqlController)
         for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
             table->AppendColumn((char*)sqlite3_column_name(stmt1, i));
         }
-
+        
         // Populating a table with database data
         while (sqlite3_step(stmt1) == SQLITE_ROW) {
             // Table row id
@@ -153,8 +157,16 @@ void GUI::TablesInit(SQLController* sqlController)
         tables.insert(std::make_pair(tableName, table));
     }
 
+    // Showing the first table
+    tables.begin()->second->Show();
+
     // Release resources associated with a prepared stmt SQL query
     sqlite3_finalize(stmt);
+}
+
+void GUI::CheckBoxesInit(SQLController* sqlController)
+{
+
 }
 
 void GUI::OnButtonClicked(wxCommandEvent& event)
