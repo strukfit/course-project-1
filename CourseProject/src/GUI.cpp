@@ -6,7 +6,7 @@ wxListBox* GUI::tableslistBox;
 
 std::map<wxString, wxListCtrl*> GUI::tables;
 
-std::map<wxString, wxCheckBox*> GUI::checkBoxes;
+std::map<wxString, std::vector<wxCheckBox*>> GUI::checkBoxes;
 
 using namespace std::string_literals;
 
@@ -71,7 +71,6 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
     // Getting all table names from database
     sqlite3_stmt* stmt = sqlController->PrepareSQL("SELECT name FROM sqlite_sequence");
     
-    int yy = 100;
     // Adding table and column names to the list box
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         // Getting table name  
@@ -84,13 +83,27 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
         // Getting column names from the table
         sqlite3_stmt* stmt1 = sqlController->PrepareSQL(("SELECT name FROM pragma_table_info(\'"s + tableName + "\')").c_str());
 
+        // Container that contains checkboxes
+        std::vector<wxCheckBox*> checkBoxesArray;
+
+        int yy = 100;
+
         // Creating check boxes of column names
         while (sqlite3_step(stmt1) == SQLITE_ROW) {
+            // Creating and adding visual table to the map
+            GUI::TableInit(sqlController, stmt1, tableName);
+            // Creating checkbox
             wxCheckBox* checkBox = new wxCheckBox(panel, wxID_ANY, (char*)sqlite3_column_text(stmt1, 0), wxPoint(10, yy), wxDefaultSize);
             checkBox->SetForegroundColour(wxColor(*wxWHITE));
-            checkBox->SetValue(true); 
+            checkBox->SetValue(true);
+            checkBox->Hide();
+
+            checkBoxesArray.push_back(checkBox);
+
             yy += 15;
         }
+        // Insert checkbox and table name into the map
+        checkBoxes.insert(std::make_pair(tableName, checkBoxesArray));
 
         // Release resources associated with a prepared stmt SQL query
         sqlite3_finalize(stmt1);
@@ -104,69 +117,56 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
 
     tableslistBox->Select(0);
 
-    GUI::TablesInit(sqlController);
+    // Showing the first table
+    tables.begin()->second->Show();
     
+    // Showing the the first table checkboxes
+    for (auto checkbox : checkBoxes.begin()->second)
+    {
+        checkbox->Show();
+    }
+
     mainWindow->CreateStatusBar();
 
     mainWindow->Show();
 }
 
-void GUI::TablesInit(SQLController* sqlController)
+void GUI::TableInit(SQLController* sqlController, sqlite3_stmt* stmt, const char* tableName)
 {
-    // Getting all table names from database
-    sqlite3_stmt* stmt = sqlController->PrepareSQL("SELECT name FROM sqlite_sequence");
+    // Creating visual table
+    wxListCtrl* table = new wxListCtrl(panel, wxID_ANY, wxPoint(140, 40), wxSize(700, 300), wxLC_REPORT);
 
-    // Creating tables and inserting it into the map
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        // Getting table name 
-        char* tableName = (char*)sqlite3_column_text(stmt, 0);
+    // Selecting table from database
+    sqlite3_stmt* stmt1 = sqlController->SelectData(tableName);
 
-        // Creating visual table
-        wxListCtrl* table = new wxListCtrl(panel, wxID_ANY, wxPoint(140, 40), wxSize(700, 300), wxLC_REPORT);
-
-        // Selecting table from database
-        sqlite3_stmt* stmt1 = sqlController->SelectData(tableName);
-
-        // Adding column names to a table
-        for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
-            table->AppendColumn((char*)sqlite3_column_name(stmt1, i));
-        }
+    // Adding column names to a table
+    for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
+        table->AppendColumn((char*)sqlite3_column_name(stmt1, i));
+    }
         
-        // Populating a table with database data
-        while (sqlite3_step(stmt1) == SQLITE_ROW) {
-            // Table row id
-            int id = sqlite3_column_int(stmt1, 0);
+    // Populating a table with database data
+    while (sqlite3_step(stmt1) == SQLITE_ROW) {
+        // Table row id
+        int id = sqlite3_column_int(stmt1, 0);
 
-            // Adding a new row to a table
-            long index = table->InsertItem(table->GetItemCount(), wxString::Format("%d", id));
-            for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
-                const char* data = (char*)sqlite3_column_text(stmt1, i);
-                table->SetItem(index, i, data);
-            }
+        // Adding a new row to a table
+        long index = table->InsertItem(table->GetItemCount(), wxString::Format("%d", id));
+        for (int i = 0; i < sqlite3_column_count(stmt1); ++i) {
+            const char* data = (char*)sqlite3_column_text(stmt1, i);
+            table->SetItem(index, i, data);
         }
-
-        // Release resources associated with a prepared stmt SQL query
-        sqlite3_finalize(stmt1);
-
-        table->SetBackgroundColour(wxColor(31, 31, 31, 255));
-        table->SetTextColour(wxColor(255, 255, 255, 255));
-
-        table->Hide();
-
-        // Insert table and it's name into the map
-        tables.insert(std::make_pair(tableName, table));
     }
 
-    // Showing the first table
-    tables.begin()->second->Show();
-
     // Release resources associated with a prepared stmt SQL query
-    sqlite3_finalize(stmt);
-}
+    sqlite3_finalize(stmt1);
 
-void GUI::CheckBoxesInit(SQLController* sqlController)
-{
+    table->SetBackgroundColour(wxColor(31, 31, 31, 255));
+    table->SetTextColour(wxColor(255, 255, 255, 255));
 
+    table->Hide();
+
+    // Insert table and it's name into the map
+    tables.insert(std::make_pair(tableName, table));
 }
 
 void GUI::OnButtonClicked(wxCommandEvent& event)
@@ -188,6 +188,21 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
         else
         {
             it->second->Hide();
+        }
+    }
+
+    for (auto it = checkBoxes.begin(); it != checkBoxes.end(); it++)
+    {
+        for (auto checkbox : it->second)
+        {
+            if (it->first == tableName)
+            {
+                checkbox->Show();
+            }
+            else
+            {
+                checkbox->Hide();
+            }
         }
     }
 }

@@ -25,11 +25,14 @@ class GUI : public wxFrame
 	static wxListBox* tableslistBox;
 
 	/// <summary>
-	/// Sorted associative container that contains wxListCtrl* table and its unique key(name)
+	/// Sorted associative container that contains wxListCtrl* table and its unique key(table name)
 	/// </summary>
 	static std::map<wxString, wxListCtrl*> tables;
 
-	static std::map<wxString, wxCheckBox*> checkBoxes;
+	/// <summary>
+	/// Sorted associative container that contains container of wxCheckBox* objects and its unique key(table name)
+	/// </summary>
+	static std::map<wxString, std::vector<wxCheckBox*>> checkBoxes;
 
 public: 
 	
@@ -47,12 +50,6 @@ public:
 	/// Tables initialization. Creating and hiding visual tables 
 	/// </summary>
 	/// <param name="sqlController"></param>
-	static void TablesInit(SQLController* sqlController);
-
-	/// <summary>
-	/// Checkboxes initialization. Creating and hiding visual checkboxes 
-	/// </summary>
-	/// <param name="sqlController"></param>
-	static void CheckBoxesInit(SQLController* sqlController);
+	static void TableInit(SQLController* sqlController, sqlite3_stmt* stmt, const char* tableName);
 
 };
