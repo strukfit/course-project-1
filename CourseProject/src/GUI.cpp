@@ -65,7 +65,7 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
     button->SetBackgroundColour(wxColor(55, 55, 55, 255));
     button->SetForegroundColour(wxColor(*wxWHITE));
     button->Bind(wxEVT_BUTTON, &GUI::OnButtonClicked);*/
-    
+
     tableslistBox = new wxListBox(panel, wxID_ANY, wxPoint(0, 40), wxSize(125, 50));
     
     // Getting all table names from database
@@ -83,9 +83,6 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
         // Getting column names from the table
         sqlite3_stmt* stmt1 = sqlController->PrepareSQL(("SELECT name FROM pragma_table_info(\'"s + tableName + "\')").c_str());
 
-        // Container that contains checkboxes
-        std::vector<wxCheckBox*> checkBoxesArray;
-
         int yy = 100;
         wxCheckListBox* checkListBox = new wxCheckListBox(panel, wxID_ANY, wxPoint(10, 100), wxSize(115, 150));
 
@@ -93,7 +90,7 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
         while (sqlite3_step(stmt1) == SQLITE_ROW) {
             
             // Creating checkbox listbox
-            checkListBox->Append((char*)sqlite3_column_text(stmt1, 0));
+            checkListBox->Check(checkListBox->Append((char*)sqlite3_column_text(stmt1, 0)));
 
             // Creating and adding visual table to the map
             GUI::TableInit(sqlController, stmt1, tableName);
