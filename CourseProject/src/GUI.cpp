@@ -191,7 +191,7 @@ void GUI::UpdateTable(const char* tableName, std::string columns)
     table->DeleteAllItems();
 
     // Selecting table from database
-    sqlite3_stmt* stmt = sqlController->SelectData(tableName);
+    sqlite3_stmt* stmt = sqlController->SelectData(tableName, columns);
 
     // Adding column names to a table
     for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
@@ -217,37 +217,51 @@ void GUI::UpdateTable(const char* tableName, std::string columns)
 
 void GUI::OnCheckBoxToggled(wxCommandEvent& event)
 {
-    ///*wxArrayInt checkedItems;
-    //wxCheckListBox* checkListBox = checkBoxes.at(selectedTable);
-    //checkListBox->GetCheckedItems(checkedItems);
-    //
-    //checkedColumns = "";
-
-    //for (auto id : checkedItems)
-    //{
-    //    checkedColumns += checkListBox->GetString(id);
-    //    checkedColumns += ", ";
-    //}*/
-    ////UpdateTable(selectedTable, checkedColumns);
-    //
-    ////wxString columnName = checkBoxes.at(selectedTable)->GetString(event.GetId());
-    //wxListCtrl* table = tables.at(selectedTable);
-    ////for (int i = 0; i < table->GetColumnCount(); i++)
-    ////{
-    ////    //if (table->GetColumn(i))
-    ////    wxListItem listItem;
-    ////    listItem.SetId(i);
-    ////    table->GetColumn(i, listItem);
-    ////    wxString name = listItem.GetText();
-    ////    wxLogStatus(name);
-    ////}
-
-    //wxListItem* listItem = new wxListItem;
-    //listItem->SetId(0);
-    //table->GetColumn(0, *listItem);
-    //wxString name = listItem->GetText();
-    //wxLogStatus(name);
+    wxArrayInt checkedItems;
+    wxCheckListBox* checkListBox = checkBoxes.at(selectedTable);
+    checkListBox->GetCheckedItems(checkedItems);
     
+    checkedColumns = "";
+
+    for (int id : checkedItems)
+    {
+        checkedColumns += checkListBox->GetString(id);
+        if (id < checkedItems.back()) {
+            checkedColumns += ", ";
+        }
+    }
+    UpdateTable(selectedTable, checkedColumns);
+    
+   /* wxString columnName = checkBoxes.at(selectedTable)->GetString(event.GetId());
+    wxListCtrl* table = tables.at(selectedTable);*/
+    
+    //wxString toggledColumnName = event.GetString();
+
+    //for (int i = 0; i < table->GetColumnCount(); i++)
+    //{
+    //    //if (table->GetColumn(i))
+    //    wxListItem listItem;
+    //    listItem.SetId(i);
+    //    listItem.SetMask(wxLIST_MASK_TEXT);
+    //    table->GetColumn(i, listItem);
+    //    wxString columnName = listItem.GetText();
+    //    wxMessageBox(columnName);
+
+    //    if (columnName == toggledColumnName)
+    //    {
+    //        
+    //    }
+    //} 
+    //if (table->GetColumn(i))
+    /*wxListItem listItem;
+    listItem.SetId(0);
+    listItem.SetMask(wxLIST_MASK_TEXT);
+    table->GetColumn(0, listItem);
+    wxString columnName = listItem.GetText();
+    listItem.SetWidth(0);
+
+    event.IsChecked();*/
+    //wxMessageBox(columnName);
 }
 
 void GUI::OnCheckAllButtonClicked(wxCommandEvent& event)
@@ -257,6 +271,8 @@ void GUI::OnCheckAllButtonClicked(wxCommandEvent& event)
     {
         checkListBox->Check(i);
     }
+    checkedColumns = "*";
+    GUI::UpdateTable(selectedTable, checkedColumns);
 }
 
 void GUI::OnListBoxSelect(wxCommandEvent& event)
