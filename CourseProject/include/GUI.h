@@ -34,9 +34,9 @@ class GUI : public wxFrame
 	static std::map<wxString, wxListCtrl*> tables;
 
 	/// <summary>
-	/// Sorted associative container that contains container of wxCheckBox* objects and its unique key(table name)
+	/// Sorted associative container that contains wxCheckListBox* objects(listbox of checkboxes) and its unique key(table name)
 	/// </summary>
-	static std::map<wxString, std::vector<wxCheckBox*>> checkBoxes;
+	static std::map<wxString, wxCheckListBox*> checkBoxes;
 
 public: 
 	

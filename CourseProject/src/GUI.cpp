@@ -6,7 +6,7 @@ wxListBox* GUI::tableslistBox;
 
 std::map<wxString, wxListCtrl*> GUI::tables;
 
-std::map<wxString, std::vector<wxCheckBox*>> GUI::checkBoxes;
+std::map<wxString, wxCheckListBox*> GUI::checkBoxes;
 
 using namespace std::string_literals;
 
@@ -87,24 +87,22 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
         std::vector<wxCheckBox*> checkBoxesArray;
 
         int yy = 100;
+        wxCheckListBox* checkListBox = new wxCheckListBox(panel, wxID_ANY, wxPoint(10, 100), wxSize(115, 150));
 
-        // Creating check boxes of column names
+        // Creating checkboxes of column names
         while (sqlite3_step(stmt1) == SQLITE_ROW) {
+            
+            // Creating checkbox listbox
+            checkListBox->Append((char*)sqlite3_column_text(stmt1, 0));
+
             // Creating and adding visual table to the map
             GUI::TableInit(sqlController, stmt1, tableName);
-            // Creating checkbox
-            wxCheckBox* checkBox = new wxCheckBox(panel, wxID_ANY, (char*)sqlite3_column_text(stmt1, 0), wxPoint(10, yy), wxDefaultSize);
-            checkBox->SetForegroundColour(wxColor(*wxWHITE));
-            checkBox->SetValue(true);
-            
-            checkBox->Hide();
-
-            checkBoxesArray.push_back(checkBox);
-
-            yy += 15;
         }
+
+        checkListBox->Hide();
+
         // Insert checkbox and table name into the map
-        checkBoxes.insert(std::make_pair(tableName, checkBoxesArray));
+        checkBoxes.insert(std::make_pair(tableName, checkListBox));
 
         // Release resources associated with a prepared stmt SQL query
         sqlite3_finalize(stmt1);
@@ -116,16 +114,14 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
     tableslistBox->SetBackgroundColour(wxColor(43, 43, 43, 255));
     tableslistBox->SetForegroundColour(wxColor(*wxWHITE));
 
+    // Selecting the first table in tablesListBox
     tableslistBox->Select(0);
 
     // Showing the first table
     tables.begin()->second->Show();
     
     // Showing the the first table checkboxes
-    for (auto checkbox : checkBoxes.begin()->second)
-    {
-        checkbox->Show();
-    }
+    checkBoxes.begin()->second->Show();
 
     mainWindow->CreateStatusBar();
 
@@ -198,16 +194,13 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
     // Showing checkboxes from a selected table and hiding another
     for (auto it = checkBoxes.begin(); it != checkBoxes.end(); it++)
     {
-        for (auto checkbox : it->second)
+        if (it->first == tableName)
         {
-            if (it->first == tableName)
-            {
-                checkbox->Show();
-            }
-            else
-            {
-                checkbox->Hide();
-            }
+            it->second->Show();
+        }
+        else
+        {
+            it->second->Hide();
         }
     }
 }
