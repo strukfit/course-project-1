@@ -96,6 +96,7 @@ void GUI::MainWindow(wxFrame* mainWindow, SQLController* sqlController)
             wxCheckBox* checkBox = new wxCheckBox(panel, wxID_ANY, (char*)sqlite3_column_text(stmt1, 0), wxPoint(10, yy), wxDefaultSize);
             checkBox->SetForegroundColour(wxColor(*wxWHITE));
             checkBox->SetValue(true);
+            
             checkBox->Hide();
 
             checkBoxesArray.push_back(checkBox);
@@ -176,9 +177,12 @@ void GUI::OnButtonClicked(wxCommandEvent& event)
 
 void GUI::OnListBoxSelect(wxCommandEvent& event)
 {
+    // Getting an id of the selected table name in the listbox
     int id = tableslistBox->GetSelection();
+
     wxString tableName = tableslistBox->GetString(id);
 
+    // Showing a selected table and hiding another
     for (auto it = tables.begin(); it != tables.end(); it++)
     {
         if (it->first == tableName)
@@ -190,7 +194,8 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
             it->second->Hide();
         }
     }
-
+    
+    // Showing checkboxes from a selected table and hiding another
     for (auto it = checkBoxes.begin(); it != checkBoxes.end(); it++)
     {
         for (auto checkbox : it->second)

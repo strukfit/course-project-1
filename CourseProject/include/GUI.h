@@ -18,11 +18,15 @@ class GUI : public wxFrame
 	/// <param name="event"></param>
 	static void OnButtonClicked(wxCommandEvent& event);
 
+	/// <summary>
+	/// Handling an event when a listbox string(table name) is selected
+	/// </summary>
+	/// <param name="event"></param>
 	static void OnListBoxSelect(wxCommandEvent& event);
 
 	static wxPanel* panel; // A panel(A window on which controls are placed)
 	
-	static wxListBox* tableslistBox;
+	static wxListBox* tableslistBox; // A tableListBox is used to select one of a list of table names.
 
 	/// <summary>
 	/// Sorted associative container that contains wxListCtrl* table and its unique key(table name)
@@ -43,8 +47,6 @@ public:
 	static void MainWindow(wxFrame* mainWindow, SQLController* sqlController);
 
 	static void AddDataWindow(wxFrame* mainWindow);
-
-	static void ConfirmationWindow(wxFrame* mainWindow);
 
 	/// <summary>
 	/// Tables initialization. Creating and hiding visual tables 

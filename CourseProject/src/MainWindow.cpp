@@ -2,7 +2,7 @@
 
 //using namespace std::string_literals;
 MainWindow::MainWindow():
-	mainWindow(new wxFrame(nullptr, wxID_ANY, "Window", wxPoint(50, 50), wxSize(900, 550)))
+	mainWindow(new wxFrame(nullptr, wxID_ANY, "Household Appliances Store", wxPoint(50, 50), wxSize(900, 550)))
 {
 	SQLController* sqlController = new SQLController;
 	try
