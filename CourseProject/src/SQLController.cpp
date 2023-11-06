@@ -81,25 +81,12 @@ void SQLController::DatabaseInit()
     );
 
     Test();
-
-    /*SQLController sqlController("database.db");
-
-    if (sqlController.executeSQL("CREATE TABLE IF NOT EXISTS MyTable (ID INTEGER PRIMARY KEY, Name TEXT)") == SQLITE_OK) {
-        wxLogMessage("Таблица создана или уже существует.");
-    }*/
 }
 
 sqlite3_stmt* SQLController::SelectData(const char* tableName)
 {
     std::string selectData = "SELECT * FROM "s + tableName;
     
-    return PrepareSQL(selectData.c_str());
-}
-
-sqlite3_stmt* SQLController::SelectData(const char* tableName, std::string columns)
-{
-    std::string selectData = "SELECT "s + columns + " FROM " + tableName;
-
     return PrepareSQL(selectData.c_str());
 }
 

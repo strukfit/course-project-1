@@ -4,6 +4,7 @@
 #include <wx/menu.h>
 #include <wx/checkbox.h>
 #include <wx/listctrl.h>
+#include <wx/dataview.h>
 #include <map>
 #include "SQLController.h"
 
@@ -25,7 +26,7 @@ class GUI : public wxFrame
 	/// Table update
 	/// </summary>
 	/// <param name="tableName"></param>
-	static void UpdateTable(const char* tableName, std::string columns);
+	static void UpdateTable(const char* tableName);
 
 	/// <summary>
 	/// Handling an event when a checkbox is clicked
@@ -48,17 +49,17 @@ class GUI : public wxFrame
 	static SQLController* sqlController;
 
 	static wxPanel* panel; // A panel(A window on which controls are placed)
+
+	static wxPanel* tablePanel; // A panel(A window on which controls are placed)
 	
 	static wxListBox* tableslistBox; // A tableListBox is used to select one of a list of table names.
 
-	static wxString selectedTable; // Stores the name of the selected table 
-
-	static std::string checkedColumns; // Stores all checked columns of the selected table 
-
 	/// <summary>
-	/// Sorted associative container that contains wxListCtrl* table and its unique key(table name)
+	/// Sorted associative container that contains wxDataViewListCtrl* table and its unique key(table name)
 	/// </summary>
-	static std::map<wxString, wxListCtrl*> tables;
+	static std::map<wxString, wxDataViewListCtrl*> tables;
+
+	static wxString selectedTable; // Stores the name of the selected table 
 
 	/// <summary>
 	/// Sorted associative container that contains wxCheckListBox* objects(listbox of checkboxes) and its unique key(table name)
