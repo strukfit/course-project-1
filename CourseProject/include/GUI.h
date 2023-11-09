@@ -13,14 +13,17 @@
 /// </summary>
 class GUI : public wxFrame
 {	
-
-	static void AddDataWindow(wxFrame* mainWindow);
-
 	/// <summary>
 	/// Tables initialization. Creating and hiding visual tables 
 	/// </summary>
 	/// <param name="tableName"></param>
 	static void TableInit(const char* tableName);
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="mainWindow"></param>
+	static void AddDataWindowInit(const char* tableName);
 
 	/// <summary>
 	/// Table update
@@ -40,11 +43,18 @@ class GUI : public wxFrame
 	/// <param name="event - event for handling"></param>
 	static void OnCheckAllButtonClicked(wxCommandEvent& event);
 
+
 	/// <summary>
 	/// Handling an event when a listbox string(table name) is selected
 	/// </summary>
 	/// <param name="event - event for handling"></param>
 	static void OnListBoxSelect(wxCommandEvent& event);
+
+	/// <summary>
+	/// Handling an event when a add data button is clicked
+	/// </summary>
+	/// <param name="event - event for handling"></param>
+	static void OnAddDataButtonClicked(wxCommandEvent& event);
 
 	static SQLController* sqlController;
 
@@ -53,11 +63,11 @@ class GUI : public wxFrame
 	static wxPanel* tablePanel; // A panel(A window on which controls are placed)
 	
 	static wxListBox* tableslistBox; // A tableListBox is used to select one of a list of table names.
-
+	
 	/// <summary>
 	/// Sorted associative container that contains wxDataViewListCtrl* table and its unique key(table name)
 	/// </summary>
-	static std::map<wxString, wxDataViewListCtrl*> tables;
+	static std::map<wxString, wxDataViewListCtrl*> tables; 
 
 	static wxString selectedTable; // Stores the name of the selected table 
 
@@ -74,5 +84,23 @@ public:
 	/// <param name="mainWindow - main window(wxFrame class object)"></param>
 	/// <param name="sqlController"></param>
 	static void MainWindowInit(wxFrame* mainWindow, SQLController* sqlController);
+};
 
+/// <summary>
+/// Implementation of the dialog box for adding data 
+/// </summary>
+class AddDataDialog : public wxDialog
+{
+private:
+
+	void OnSave(wxCommandEvent& event);
+
+    wxString selectedTable;
+
+    std::vector<wxTextCtrl*> formFields;
+
+    SQLController* sqlController;
+
+public:
+	AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable);
 };

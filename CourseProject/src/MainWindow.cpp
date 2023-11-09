@@ -9,7 +9,6 @@ MainWindow::MainWindow():
 		sqlController->OpenDB("database.db");
 		sqlController->DatabaseInit();
 		GUI::MainWindowInit(mainWindow, sqlController);
-		//wxLogStatus();
 	}
 	catch (Exception exc)
 	{

@@ -28,18 +28,16 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     */
     mainWindow->Bind(wxEVT_CLOSE_WINDOW, [&](wxCloseEvent& event)
         {
-            if (event.CanVeto())
+            if (wxMessageBox("Are you sure you want to close?",
+                "Confirm action",
+                wxICON_QUESTION | wxYES_NO) != wxYES)
             {
-                if (wxMessageBox("Are you sure you want to close?",
-                    "Confirm action",
-                    wxICON_QUESTION | wxYES_NO) != wxYES)
-                {
-                    event.Veto();
-                    return;
-                }
+                event.Veto();
+                return;
             }
             event.Skip();
-        });
+        }
+    );
 
     // Creating menu bar
     wxMenuBar* menuBar = new wxMenuBar();
@@ -68,10 +66,10 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     mainWindow->SetMenuBar(menuBar);
 
     // Creating a panel(A window on which controls are placed)
-    panel = new wxPanel(mainWindow, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
+    panel = new wxPanel(mainWindow, wxID_ANY, wxDefaultPosition, mainWindow->GetSize());
     panel->SetBackgroundColour(wxColour(43, 43, 43, 255));
 
-    tablePanel = new wxPanel(panel, wxID_ANY, wxPoint(140, 40), wxSize(700, 300));
+    tablePanel = new wxPanel(panel, wxID_ANY, wxPoint(130, 30), wxSize(750, 350));
 
     tableslistBox = new wxListBox(panel, wxID_ANY, wxPoint(0, 40), wxSize(125, 50));
     
@@ -136,12 +134,24 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     checkAllButton->Bind(wxEVT_BUTTON, &GUI::OnCheckAllButtonClicked);
     
     // Creating update table button and handling event function
-    wxButton* updateTableButton = new wxButton(panel, wxID_ANY, "Update Table", wxPoint(145, 10), wxSize(100, 25));
+    wxButton* updateTableButton = new wxButton(panel, wxID_ANY, "Update Table", wxPoint(145, 425), wxSize(100, 25));
     updateTableButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event)
         {
             GUI::UpdateTable(selectedTable);
         }
     );
+
+    // Creating add data button
+    wxButton* addDataButton = new wxButton(panel, wxID_ANY, "Add", wxPoint(145, 380), wxSize(75, 25));
+    addDataButton->Bind(wxEVT_BUTTON, &GUI::OnAddDataButtonClicked);
+
+    // Creating update data button
+    wxButton* updateDataButton = new wxButton(panel, wxID_ANY, "Update", wxPoint(225, 380), wxSize(75, 25));
+    updateDataButton->Disable();
+
+    // Creating delete data button
+    wxButton* deleteDataButton = new wxButton(panel, wxID_ANY, "Delete", wxPoint(305, 380), wxSize(75, 25));
+    deleteDataButton->Disable();
 
     mainWindow->CreateStatusBar();
 
@@ -170,7 +180,7 @@ void GUI::TableInit(const char* tableName)
         // Adding a new row to a table
         wxVector<wxVariant> data;
         for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
-            data.push_back(wxVariant((char*)sqlite3_column_text(stmt, i)));
+            data.push_back(wxVariant(wxString::FromUTF8((char*)sqlite3_column_text(stmt, i))));
         }
         table->AppendItem(data);
     }
@@ -194,6 +204,11 @@ void GUI::TableInit(const char* tableName)
 
     // Insert table and it's name into the map
     tables.insert(std::make_pair(tableName, table));
+}
+
+void GUI::AddDataWindowInit(const char* tableName)
+{
+    
 }
 
 void GUI::UpdateTable(const char* tableName)
@@ -260,7 +275,7 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
             it->second->Hide();
         }
     }
-
+    
     // Showing checkboxes from a selected table and hiding another
     for (auto it = checkBoxes.begin(); it != checkBoxes.end(); it++)
     {
@@ -274,3 +289,95 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
         }
     }
 }
+
+void GUI::OnAddDataButtonClicked(wxCommandEvent& event)
+{
+    AddDataDialog* addDataDialog = new AddDataDialog(panel, sqlController, selectedTable);
+    addDataDialog->ShowModal();
+    UpdateTable(selectedTable);
+}
+
+AddDataDialog::AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable)
+    : wxDialog(parent, wxID_ANY, "Add data")
+{
+    this->sqlController = sqlController;
+
+    this->selectedTable = selectedTable;
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+    // Selecting table from database
+    sqlite3_stmt* stmt = sqlController->SelectData(selectedTable);
+
+    // Getting column names and adding to the form
+    for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+        // Создайте элементы управления для ввода данных
+        wxStaticText* columnName = new wxStaticText(this, wxID_ANY, (char*)sqlite3_column_name(stmt, i));
+        wxTextCtrl* textCtrl = new wxTextCtrl(this, wxID_ANY);
+
+        sizer->Add(columnName, 0, wxALL, 5);
+        sizer->Add(textCtrl, 0, wxALL | wxEXPAND, 5);
+
+        formFields.push_back(textCtrl);
+    }
+
+    // Кнопка для сохранения данны
+    wxButton* saveButton = new wxButton(this, wxID_OK, "Save");
+    saveButton->Bind(wxEVT_BUTTON, &AddDataDialog::OnSave, this);
+
+    // Кнопка для отмены
+    wxButton* cancelButton = new wxButton(this, wxID_CANCEL, "Cancel");
+
+    wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+
+    buttonSizer->Add(saveButton, 0, wxALL | wxEXPAND, 5);
+    buttonSizer->Add(cancelButton, 0, wxALL | wxEXPAND, 5);
+
+    // Разместите элементы управления с использованием wxSizer
+    sizer->Add(buttonSizer, 0, wxALL | wxALIGN_CENTER, 5);
+
+    SetSizer(sizer);
+    sizer->Fit(this);
+    sizer->SetSizeHints(this);
+}
+
+void AddDataDialog::OnSave(wxCommandEvent& event)
+{
+    // Getting column types from the table
+    sqlite3_stmt* stmt = sqlController->PrepareSQL(("SELECT type FROM pragma_table_info(\'"s + selectedTable + "\')").c_str());
+    
+    std::string values = "";
+
+    int totalRows = formFields.size() - 1;
+
+    int i = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+
+        const char* type = (char*)sqlite3_column_text(stmt, 0);
+
+        if (std::strcmp(type, "VARCHAR(255)") == 0 || std::strcmp(type, "TEXT") == 0)
+        {
+            values += "\""s + formFields[i]->GetValue() + "\"";
+        }
+        else
+        {
+            values += formFields[i]->GetValue();
+        }
+
+        if (i < totalRows)
+        {
+            values += ", ";
+
+        }
+        i++;
+    }
+
+    // Release resources associated with a prepared stmt SQL query
+    sqlite3_finalize(stmt);
+
+    sqlController->ExecuteSQL("INSERT INTO "s + selectedTable + " VALUES(" + values + ")");
+
+    // Закройте окно после сохранения
+    EndModal(wxID_OK);
+}
+
