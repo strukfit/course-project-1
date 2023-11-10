@@ -14,6 +14,10 @@ std::map<wxString, wxCheckListBox*> GUI::checkBoxes;
 
 wxString GUI::selectedTable;
 
+wxButton* GUI::updateDataButton;
+
+wxButton* GUI::deleteDataButton;
+
 using namespace std::string_literals;
 
 
@@ -146,14 +150,13 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     addDataButton->Bind(wxEVT_BUTTON, &GUI::OnAddDataButtonClicked);
 
     // Creating update data button
-    wxButton* updateDataButton = new wxButton(panel, wxID_ANY, "Update", wxPoint(225, 380), wxSize(75, 25));
+    updateDataButton = new wxButton(panel, wxID_ANY, "Update", wxPoint(225, 380), wxSize(75, 25));
+    updateDataButton->Bind(wxEVT_BUTTON, &GUI::OnUpdateDataButtonClicked);
     updateDataButton->Disable();
 
     // Creating delete data button
-    wxButton* deleteDataButton = new wxButton(panel, wxID_ANY, "Delete", wxPoint(305, 380), wxSize(75, 25));
+    deleteDataButton = new wxButton(panel, wxID_ANY, "Delete", wxPoint(305, 380), wxSize(75, 25));
     deleteDataButton->Disable();
-
-    mainWindow->CreateStatusBar();
 
     mainWindow->Show();
 }
@@ -170,7 +173,7 @@ void GUI::TableInit(const char* tableName)
 
     // Adding column names to a table
     for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
-        wxString columnName = (char*)sqlite3_column_name(stmt, i);
+        wxString columnName = wxString::FromUTF8((char*)sqlite3_column_name(stmt, i));
         wxDataViewColumn* column = table->AppendTextColumn(columnName);
         column->SetMinWidth(columnName.Length() * 8); // Set a minimum width for the column
     }
@@ -202,13 +205,10 @@ void GUI::TableInit(const char* tableName)
 
     table->Hide();
 
+    table->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &GUI::OnSelectionChanged);
+
     // Insert table and it's name into the map
     tables.insert(std::make_pair(tableName, table));
-}
-
-void GUI::AddDataWindowInit(const char* tableName)
-{
-    
 }
 
 void GUI::UpdateTable(const char* tableName)
@@ -225,7 +225,7 @@ void GUI::UpdateTable(const char* tableName)
         // Adding a new row to a table
         wxVector<wxVariant> data;
         for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
-            data.push_back(wxVariant((char*)sqlite3_column_text(stmt, i)));
+            data.push_back(wxVariant(wxString::FromUTF8((char*)sqlite3_column_text(stmt, i))));
         }
         table->AppendItem(data);
     }
@@ -292,12 +292,47 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
 
 void GUI::OnAddDataButtonClicked(wxCommandEvent& event)
 {
-    AddDataDialog* addDataDialog = new AddDataDialog(panel, sqlController, selectedTable);
+    AddDataDialog* addDataDialog = new AddDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
     addDataDialog->ShowModal();
     UpdateTable(selectedTable);
 }
 
-AddDataDialog::AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable)
+void GUI::OnUpdateDataButtonClicked(wxCommandEvent& event)
+{
+    /*try
+    {
+        
+    }
+    catch (Exception exp)
+    {
+        wxLogError(exp.what().c_str());
+    }*/
+    
+    UpdateDataDialog* updateDataDialog = new UpdateDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
+    updateDataDialog->ShowModal();
+    UpdateTable(selectedTable);
+}
+
+void GUI::OnSelectionChanged(wxDataViewEvent& event)
+{
+    wxDataViewListCtrl* table = tables.at(selectedTable);
+
+    // Check if any row is highlighted in data list view
+    wxDataViewItem item = table->GetSelection();
+    if (item.IsOk())
+    {
+        updateDataButton->Enable();
+        deleteDataButton->Enable();
+    }
+    else
+    {
+        updateDataButton->Disable();
+        deleteDataButton->Disable();
+    }
+    
+}
+
+AddDataDialog::AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table)
     : wxDialog(parent, wxID_ANY, "Add data")
 {
     this->sqlController = sqlController;
@@ -306,13 +341,13 @@ AddDataDialog::AddDataDialog(wxWindow* parent, SQLController* sqlController, wxS
 
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-    // Selecting table from database
-    sqlite3_stmt* stmt = sqlController->SelectData(selectedTable);
+    // Getting the number of columns
+    unsigned int columnCount = table->GetColumnCount();
 
     // Getting column names and adding to the form
-    for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
-        // Создайте элементы управления для ввода данных
-        wxStaticText* columnName = new wxStaticText(this, wxID_ANY, (char*)sqlite3_column_name(stmt, i));
+    for (int i = 0; i < columnCount; ++i) {
+        // Create data input controls
+        wxStaticText* columnName = new wxStaticText(this, wxID_ANY, table->GetColumn(i)->GetTitle());
         wxTextCtrl* textCtrl = new wxTextCtrl(this, wxID_ANY);
 
         sizer->Add(columnName, 0, wxALL, 5);
@@ -321,11 +356,11 @@ AddDataDialog::AddDataDialog(wxWindow* parent, SQLController* sqlController, wxS
         formFields.push_back(textCtrl);
     }
 
-    // Кнопка для сохранения данны
+    // Button to save data
     wxButton* saveButton = new wxButton(this, wxID_OK, "Save");
     saveButton->Bind(wxEVT_BUTTON, &AddDataDialog::OnSave, this);
 
-    // Кнопка для отмены
+    // Button to cancel
     wxButton* cancelButton = new wxButton(this, wxID_CANCEL, "Cancel");
 
     wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -333,7 +368,7 @@ AddDataDialog::AddDataDialog(wxWindow* parent, SQLController* sqlController, wxS
     buttonSizer->Add(saveButton, 0, wxALL | wxEXPAND, 5);
     buttonSizer->Add(cancelButton, 0, wxALL | wxEXPAND, 5);
 
-    // Разместите элементы управления с использованием wxSizer
+    // Placing controls using boxSizer
     sizer->Add(buttonSizer, 0, wxALL | wxALIGN_CENTER, 5);
 
     SetSizer(sizer);
@@ -351,6 +386,8 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
     int totalRows = formFields.size() - 1;
 
     int i = 0;
+
+    // Creating statement like value1, value2..."
     while (sqlite3_step(stmt) == SQLITE_ROW) {
 
         const char* type = (char*)sqlite3_column_text(stmt, 0);
@@ -375,9 +412,141 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
     // Release resources associated with a prepared stmt SQL query
     sqlite3_finalize(stmt);
 
-    sqlController->ExecuteSQL("INSERT INTO "s + selectedTable + " VALUES(" + values + ")");
+    try 
+    {
+       sqlController->ExecuteSQL(("INSERT INTO "s + selectedTable + " VALUES(" + values + ")").ToUTF8());
 
-    // Закройте окно после сохранения
-    EndModal(wxID_OK);
+       // Close the window after saving
+       EndModal(wxID_OK);
+
+       wxMessageBox("Data added successfully");
+    }
+    catch (Exception& exp)
+    {
+        wxLogError(exp.what().c_str());
+    }
+    
 }
 
+UpdateDataDialog::UpdateDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table)
+    : wxDialog(parent, wxID_ANY, "Update data")
+{
+    this->sqlController = sqlController;
+
+    this->selectedTable = selectedTable;
+
+    this->table = table;
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+    // Getting table selection 
+    wxDataViewItem item = table->GetSelection();
+
+    // Getting the data model
+    wxDataViewModel* model = table->GetModel();
+
+    // Getting the number of columns
+    unsigned int columnCount = table->GetColumnCount();
+
+    wxVariant columnValue;
+    model->GetValue(columnValue, item, 0);
+
+    // Getting selected row id
+    this->selectedRowId = columnValue.GetString();
+
+    // Gettind the name of id column
+    this->IdColumnName = table->GetColumn(0)->GetTitle();
+
+    // Getting column names and adding to the form
+    for (int i = 0; i < columnCount; ++i) {
+        // Create data input controls
+        wxStaticText* columnName = new wxStaticText(this, wxID_ANY, table->GetColumn(i)->GetTitle());
+
+        // Get the value in the columns of the selected row
+        model->GetValue(columnValue, item, i);
+
+        wxTextCtrl* textCtrl = new wxTextCtrl(this, wxID_ANY, columnValue.GetString());
+
+        if (i == 0)
+        {
+            textCtrl->SetEditable(false);
+        }
+
+        sizer->Add(columnName, 0, wxALL, 5);
+        sizer->Add(textCtrl, 0, wxALL | wxEXPAND, 5);
+
+        formFields.push_back(textCtrl);
+    }
+
+    // Button to save data
+    wxButton* saveButton = new wxButton(this, wxID_OK, "Save");
+    saveButton->Bind(wxEVT_BUTTON, &UpdateDataDialog::OnSave, this);
+
+    // Button to cancel
+    wxButton* cancelButton = new wxButton(this, wxID_CANCEL, "Cancel");
+
+    wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+
+    buttonSizer->Add(saveButton, 0, wxALL | wxEXPAND, 5);
+    buttonSizer->Add(cancelButton, 0, wxALL | wxEXPAND, 5);
+
+    // Placing controls using wxSizer
+    sizer->Add(buttonSizer, 0, wxALL | wxALIGN_CENTER, 5);
+
+    SetSizer(sizer);
+    sizer->Fit(this);
+    sizer->SetSizeHints(this);
+}
+
+void UpdateDataDialog::OnSave(wxCommandEvent& event)
+{
+    // Getting column types from the table
+    sqlite3_stmt* stmt = sqlController->PrepareSQL(("SELECT type FROM pragma_table_info(\'"s + selectedTable + "\')").c_str());
+
+    std::string values = "";
+
+    int totalRows = formFields.size() - 1;
+
+    int i = 0;
+
+    // Creating statement like "columnName1 = value1, columnName2 = value2..."
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+
+        const char* type = (char*)sqlite3_column_text(stmt, 0);
+
+        values += table->GetColumn(i)->GetTitle() + " = ";
+
+        if (std::strcmp(type, "VARCHAR(255)") == 0 || std::strcmp(type, "TEXT") == 0)
+        {
+            values += "\""s + formFields[i]->GetValue() + "\"";
+        }
+        else
+        {
+            values += formFields[i]->GetValue();
+        }
+
+        if (i < totalRows)
+        {
+            values += ", ";
+
+        }
+        i++;
+    }
+
+    // Release resources associated with a prepared stmt SQL query
+    sqlite3_finalize(stmt);
+
+    try
+    {
+        sqlController->ExecuteSQL(("UPDATE "s + selectedTable + " SET " + values + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
+
+        // Close the window after saving
+        EndModal(wxID_OK);
+
+        wxMessageBox("Data updated successfully");
+    }
+    catch (Exception& exp)
+    {
+        wxLogError(exp.what().c_str());
+    }
+}

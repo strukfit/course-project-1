@@ -20,12 +20,6 @@ class GUI : public wxFrame
 	static void TableInit(const char* tableName);
 
 	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="mainWindow"></param>
-	static void AddDataWindowInit(const char* tableName);
-
-	/// <summary>
 	/// Table update
 	/// </summary>
 	/// <param name="tableName"></param>
@@ -56,6 +50,18 @@ class GUI : public wxFrame
 	/// <param name="event - event for handling"></param>
 	static void OnAddDataButtonClicked(wxCommandEvent& event);
 
+	/// <summary>
+	/// Handling an event when a update data button is clicked
+	/// </summary>
+	/// <param name="event - event for handling"></param>
+	static void OnUpdateDataButtonClicked(wxCommandEvent& event);
+
+	/// <summary>
+	/// Handling an event when a selection of the table's row is changed
+	/// </summary>
+	/// <param name="event"></param>
+	static void OnSelectionChanged(wxDataViewEvent& event);
+
 	static SQLController* sqlController;
 
 	static wxPanel* panel; // A panel(A window on which controls are placed)
@@ -70,6 +76,10 @@ class GUI : public wxFrame
 	static std::map<wxString, wxDataViewListCtrl*> tables; 
 
 	static wxString selectedTable; // Stores the name of the selected table 
+
+	static wxButton* updateDataButton;
+
+	static wxButton* deleteDataButton;
 
 	/// <summary>
 	/// Sorted associative container that contains wxCheckListBox* objects(listbox of checkboxes) and its unique key(table name)
@@ -102,5 +112,30 @@ private:
     SQLController* sqlController;
 
 public:
-	AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable);
+	AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table);
+};
+
+/// <summary>
+/// Implementation of the dialog box for updating data 
+/// </summary>
+class UpdateDataDialog : public wxDialog
+{
+private:
+
+	void OnSave(wxCommandEvent& event);
+
+	wxString selectedTable;
+
+	std::vector<wxTextCtrl*> formFields;
+
+	SQLController* sqlController;
+
+	wxDataViewListCtrl* table;
+
+	wxString selectedRowId;
+
+	wxString IdColumnName;
+
+public:
+	UpdateDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table);
 };

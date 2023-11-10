@@ -41,12 +41,6 @@ public:
     /// </summary>
     void DatabaseInit();
 
-    void AddData();
-
-    void DeleteData(); 
-
-    void UpdateData();
-
     /// <summary>
     /// Selecting data from the table and preparing SQL statement(compilation into a byte-code program) 
     /// </summary>

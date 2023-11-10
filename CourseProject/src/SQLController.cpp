@@ -29,11 +29,9 @@ void SQLController::ExecuteSQL(const char* sql)
     sqlite3_stmt* stmt;
 
     char* errMsg = 0;
-    
-    if (sqlite3_exec(db, sql, 0, 0, &errMsg) != SQLITE_OK) {
-
-        throw(Exception("Error when executing SQL query: "s + errMsg));
-        sqlite3_free(errMsg);
+    if (sqlite3_exec(db, sql, 0, 0, nullptr) != SQLITE_OK) 
+    {
+        throw(Exception("Error when executing SQL query: "s + sqlite3_errmsg(db)));
     }
 }
 
