@@ -57,6 +57,12 @@ class GUI : public wxFrame
 	static void OnUpdateDataButtonClicked(wxCommandEvent& event);
 
 	/// <summary>
+	/// Handling an event when a update data button is clicked
+	/// </summary>
+	/// <param name="event - event for handling"></param>
+	static void OnDeleteDataButtonClicked(wxCommandEvent& event);
+	
+	/// <summary>
 	/// Handling an event when a selection of the table's row is changed
 	/// </summary>
 	/// <param name="event"></param>

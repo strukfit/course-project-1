@@ -156,6 +156,7 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
 
     // Creating delete data button
     deleteDataButton = new wxButton(panel, wxID_ANY, "Delete", wxPoint(305, 380), wxSize(75, 25));
+    deleteDataButton->Bind(wxEVT_BUTTON, &GUI::OnDeleteDataButtonClicked);
     deleteDataButton->Disable();
 
     mainWindow->Show();
@@ -299,17 +300,38 @@ void GUI::OnAddDataButtonClicked(wxCommandEvent& event)
 
 void GUI::OnUpdateDataButtonClicked(wxCommandEvent& event)
 {
-    /*try
-    {
-        
-    }
-    catch (Exception exp)
-    {
-        wxLogError(exp.what().c_str());
-    }*/
-    
     UpdateDataDialog* updateDataDialog = new UpdateDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
     updateDataDialog->ShowModal();
+    UpdateTable(selectedTable);
+}
+
+void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
+{
+    wxDataViewListCtrl* table = tables.at(selectedTable);
+
+    // Getting table selection 
+    wxDataViewItem item = table->GetSelection();
+
+    // Getting the data model
+    wxDataViewModel* model = table->GetModel();
+
+    wxVariant columnValue;
+    model->GetValue(columnValue, item, 0);
+
+    // Getting selected row id
+    wxString selectedRowId = columnValue.GetString();
+
+    // Gettind the name of id column
+    wxString IdColumnName = table->GetColumn(0)->GetTitle();
+
+    try
+    {
+        sqlController->ExecuteSQL(("DELETE FROM "s + selectedTable + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
+    }
+    catch (Exception& exp)
+    {
+        wxLogError(exp.what().c_str());
+    }
     UpdateTable(selectedTable);
 }
 
