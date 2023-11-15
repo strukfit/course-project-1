@@ -16,6 +16,12 @@ SQLController::~SQLController()
     }
 }
 
+bool SQLController::isDatabaseExist(const std::string& dbName)
+{
+    std::ifstream file(dbName);
+    return file.good();
+}
+
 void SQLController::OpenDB(const char* filename)
 {
     if (sqlite3_open(filename, &db))
@@ -56,7 +62,7 @@ void SQLController::DatabaseInit()
             CountryOfOrigin VARCHAR(255),
             ContactInfo TEXT
         );
-
+        
         CREATE TABLE IF NOT EXISTS Products(
             ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
             ProductName VARCHAR(255) UNIQUE,
@@ -68,7 +74,7 @@ void SQLController::DatabaseInit()
             FOREIGN KEY(CategoryID) REFERENCES ProductCategories(CategoryID),
             FOREIGN KEY(ManufacturerID) REFERENCES Manufacturers(ManufacturerID)
         );
-
+        
         CREATE TABLE IF NOT EXISTS ProductCategories (
             CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
             CategoryName VARCHAR(255) UNIQUE,

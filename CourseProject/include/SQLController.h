@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sqlite3.h>
+#include <fstream>
 #include "Exception.h"
 
 /// <summary>
@@ -14,6 +15,12 @@ public:
     SQLController();
 
     ~SQLController();
+
+    /// <summary>
+    /// Database file existence check 
+    /// </summary>
+    /// <param name="dbName"></param>
+    bool isDatabaseExist(const std::string& dbName);
 
     /// <summary>
     /// Creates and opens database

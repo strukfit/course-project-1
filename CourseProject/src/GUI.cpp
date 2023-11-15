@@ -303,6 +303,9 @@ void GUI::OnUpdateDataButtonClicked(wxCommandEvent& event)
     UpdateDataDialog* updateDataDialog = new UpdateDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
     updateDataDialog->ShowModal();
     UpdateTable(selectedTable);
+
+    updateDataButton->Disable();
+    deleteDataButton->Disable();
 }
 
 void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
@@ -333,6 +336,9 @@ void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
         wxLogError(exp.what().c_str());
     }
     UpdateTable(selectedTable);
+
+    updateDataButton->Disable();
+    deleteDataButton->Disable();
 }
 
 void GUI::OnSelectionChanged(wxDataViewEvent& event)
