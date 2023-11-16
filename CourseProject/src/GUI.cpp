@@ -78,7 +78,12 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     tableslistBox = new wxListBox(panel, wxID_ANY, wxPoint(0, 40), wxSize(125, 50));
     
     //Getting all table names from database
-    sqlite3_stmt* stmt = sqlController->PrepareSQL("SELECT name FROM sqlite_sequence");
+    sqlite3_stmt* stmt = sqlController->PrepareSQL(R"(
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+        AND name != 'sqlite_sequence';
+    )");
     
     // Using data in every row of every database table
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -127,11 +132,11 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     // Storing selected table name
     selectedTable = tableslistBox->GetString(0);
 
-    // Showing the first table
-    tables.begin()->second->Show();
+    // Showing selected table
+    tables.at(selectedTable)->Show();
     
-    // Showing the the first table checkboxes
-    checkBoxes.begin()->second->Show();
+    // Showing selected table checkboxes
+    checkBoxes.at(selectedTable)->Show();
 
     //Creating button that check all checkboxes
     wxButton* checkAllButton = new wxButton(panel, wxID_ANY, "Check all", wxPoint(20, 260), wxSize(95, 25));
