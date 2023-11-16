@@ -235,13 +235,35 @@ void GUI::UpdateTable(const char* tableName)
     sqlite3_finalize(stmt);
 }
 
+void GUI::SetTableColumnWidths(wxDataViewListCtrl* table)
+{
+    for (size_t i = 0; i < table->GetColumnCount(); ++i) 
+    {
+        auto width = table->GetColumn(i)->GetTitle().Length();
+
+        if (width < 10)
+        {
+            width *= 12;
+        }
+        else
+        {
+            width *= 8;
+        }
+
+        table->GetColumn(i)->SetWidth(width);
+    }
+}
+
 void GUI::OnCheckBoxToggled(wxCommandEvent& event)
 {
     wxCheckListBox* checkListBox = wxDynamicCast(event.GetEventObject(), wxCheckListBox);
 
     int id = event.GetInt();
 
-    tables.at(selectedTable)->GetColumn(id)->SetHidden(!checkListBox->IsChecked(id));
+    wxDataViewListCtrl* table = tables.at(selectedTable);
+    table->GetColumn(id)->SetHidden(!checkListBox->IsChecked(id));
+
+    SetTableColumnWidths(table);
     
     tablePanel->Layout();
 }
@@ -254,11 +276,21 @@ void GUI::OnCheckAllButtonClicked(wxCommandEvent& event)
         checkListBox->Check(i);
         tables.at(selectedTable)->GetColumn(i)->SetHidden(false);
     }
+
+    wxDataViewListCtrl* table = tables.at(selectedTable);
+    
+    SetTableColumnWidths(table);
+
     tablePanel->Layout();
 }
 
 void GUI::OnListBoxSelect(wxCommandEvent& event)
 {
+    updateDataButton->Disable();
+    deleteDataButton->Disable();
+
+    tables.at(selectedTable)->UnselectAll();
+
     // Getting an id of the selected table name in the listbox
     int id = event.GetSelection();
 

@@ -26,6 +26,12 @@ class GUI : public wxFrame
 	static void UpdateTable(const char* tableName);
 
 	/// <summary>
+	/// Setting table column widths
+	/// </summary>
+	/// <param name="table"></param>
+	static void SetTableColumnWidths(wxDataViewListCtrl* table);
+
+	/// <summary>
 	/// Handling an event when a checkbox is clicked
 	/// </summary>
 	/// <param name="event - event for handling"></param>
