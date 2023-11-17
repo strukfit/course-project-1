@@ -93,6 +93,8 @@ class GUI : public wxFrame
 
 	static wxButton* deleteDataButton;
 
+	static bool rowSelected;
+
 	/// <summary>
 	/// Sorted associative container that contains wxCheckListBox* objects(listbox of checkboxes) and its unique key(table name)
 	/// </summary>

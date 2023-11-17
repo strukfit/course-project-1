@@ -12,7 +12,6 @@ MainWindow::MainWindow():
 		if (!isDbExist)
 		{
 			sqlController->DatabaseInit();
-			std::cout << "DB init" << std::endl;
 		}
 		GUI::MainWindowInit(mainWindow, sqlController);
 	}
@@ -21,4 +20,3 @@ MainWindow::MainWindow():
 		wxLogError(exc.what().c_str());
 	}
 }
-

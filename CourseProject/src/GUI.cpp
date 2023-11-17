@@ -18,8 +18,19 @@ wxButton* GUI::updateDataButton;
 
 wxButton* GUI::deleteDataButton;
 
+bool GUI::rowSelected = false;
+
 using namespace std::string_literals;
 
+namespace MenuIds
+{
+    const int addDataId = 1;
+    const int updateDataId = 2;
+    const int deleteDataId = 3;
+
+    const int aboutProgramId = 4;
+    const int aboutDeveloperId = 4;
+}
 
 void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
 {
@@ -46,26 +57,24 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     // Creating menu bar
     wxMenuBar* menuBar = new wxMenuBar();
 
-    // Creating file menu
-    wxMenu* fileMenu = new wxMenu();
-    fileMenu->Append(wxID_NEW);
-    fileMenu->Append(wxID_OPEN);
-    fileMenu->AppendSeparator();
-    fileMenu->Append(wxID_SAVE);
-    fileMenu->Append(wxID_SAVEAS);
-    fileMenu->AppendSeparator();
-    fileMenu->Append(wxID_EXIT);
+    // Creating database menu
+    wxMenu* databaseMenu = new wxMenu();
+    databaseMenu->Append(MenuIds::addDataId, "Add data \tCtrl-A");
+    databaseMenu->Bind(wxEVT_MENU, GUI::OnAddDataButtonClicked, MenuIds::addDataId);
 
-    // Creating edit menu
-    wxMenu* editMenu = new wxMenu();
-    editMenu->Append(wxID_UNDO);
-    editMenu->Append(wxID_REDO);
-    editMenu->AppendSeparator();
-    editMenu->Append(wxID_CUT);
-    editMenu->Append(wxID_PASTE);
+    databaseMenu->Append(MenuIds::updateDataId, "Update data \tCtrl-U");
+    databaseMenu->Bind(wxEVT_MENU, GUI::OnUpdateDataButtonClicked, MenuIds::updateDataId);
 
-    menuBar->Append(fileMenu, "File");
-    menuBar->Append(editMenu, "Edit");
+    databaseMenu->Append(MenuIds::deleteDataId, "Delete data \tDel");
+    databaseMenu->Bind(wxEVT_MENU, GUI::OnDeleteDataButtonClicked, MenuIds::deleteDataId);
+
+    // Creating info menu
+    wxMenu* infoMenu = new wxMenu();
+    infoMenu->Append(MenuIds::aboutProgramId, "About program");
+    infoMenu->Append(MenuIds::aboutDeveloperId, "About developer");
+
+    menuBar->Append(databaseMenu, "Database");
+    menuBar->Append(infoMenu, "Info");
 
     mainWindow->SetMenuBar(menuBar);
 
@@ -294,6 +303,8 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
     updateDataButton->Disable();
     deleteDataButton->Disable();
 
+    rowSelected = false;
+
     tables.at(selectedTable)->UnselectAll();
 
     // Getting an id of the selected table name in the listbox
@@ -337,45 +348,55 @@ void GUI::OnAddDataButtonClicked(wxCommandEvent& event)
 
 void GUI::OnUpdateDataButtonClicked(wxCommandEvent& event)
 {
-    UpdateDataDialog* updateDataDialog = new UpdateDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
-    updateDataDialog->ShowModal();
-    UpdateTable(selectedTable);
+    if (rowSelected)
+    {
+        UpdateDataDialog* updateDataDialog = new UpdateDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
+        updateDataDialog->ShowModal();
+        UpdateTable(selectedTable);
 
-    updateDataButton->Disable();
-    deleteDataButton->Disable();
+        updateDataButton->Disable();
+        deleteDataButton->Disable();
+
+        rowSelected = false;
+    }
 }
 
 void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
 {
-    wxDataViewListCtrl* table = tables.at(selectedTable);
-
-    // Getting table selection 
-    wxDataViewItem item = table->GetSelection();
-
-    // Getting the data model
-    wxDataViewModel* model = table->GetModel();
-
-    wxVariant columnValue;
-    model->GetValue(columnValue, item, 0);
-
-    // Getting selected row id
-    wxString selectedRowId = columnValue.GetString();
-
-    // Gettind the name of id column
-    wxString IdColumnName = table->GetColumn(0)->GetTitle();
-
-    try
+    if (rowSelected)
     {
-        sqlController->ExecuteSQL(("DELETE FROM "s + selectedTable + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
-    }
-    catch (Exception& exp)
-    {
-        wxLogError(exp.what().c_str());
-    }
-    UpdateTable(selectedTable);
+        wxDataViewListCtrl* table = tables.at(selectedTable);
 
-    updateDataButton->Disable();
-    deleteDataButton->Disable();
+        // Getting table selection 
+        wxDataViewItem item = table->GetSelection();
+
+        // Getting the data model
+        wxDataViewModel* model = table->GetModel();
+
+        wxVariant columnValue;
+        model->GetValue(columnValue, item, 0);
+
+        // Getting selected row id
+        wxString selectedRowId = columnValue.GetString();
+
+        // Gettind the name of id column
+        wxString IdColumnName = table->GetColumn(0)->GetTitle();
+
+        try
+        {
+            sqlController->ExecuteSQL(("DELETE FROM "s + selectedTable + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
+        }
+        catch (Exception& exp)
+        {
+            wxLogError(exp.what().c_str());
+        }
+        UpdateTable(selectedTable);
+
+        updateDataButton->Disable();
+        deleteDataButton->Disable();
+
+        rowSelected = false;
+    }
 }
 
 void GUI::OnSelectionChanged(wxDataViewEvent& event)
@@ -386,11 +407,13 @@ void GUI::OnSelectionChanged(wxDataViewEvent& event)
     wxDataViewItem item = table->GetSelection();
     if (item.IsOk())
     {
+        rowSelected = true;
         updateDataButton->Enable();
         deleteDataButton->Enable();
     }
     else
     {
+        rowSelected = false;
         updateDataButton->Disable();
         deleteDataButton->Disable();
     }
@@ -451,7 +474,7 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
     int totalRows = formFields.size() - 1;
 
     int i = 0;
-
+    
     // Creating statement like value1, value2..."
     while (sqlite3_step(stmt) == SQLITE_ROW) {
 

@@ -99,7 +99,6 @@ sqlite3_stmt* SQLController::SelectData(const char* tableName)
 
 void SQLController::Test()
 {
-
     ExecuteSQL(R"(
         INSERT INTO ProductCategories (CategoryName, AverageRating, Description) 
         VALUES
