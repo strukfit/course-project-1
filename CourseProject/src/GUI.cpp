@@ -18,6 +18,10 @@ wxButton* GUI::updateDataButton;
 
 wxButton* GUI::deleteDataButton;
 
+AboutProgramDialog* GUI::aboutProgramDialog;
+
+AboutDeveloperDialog* GUI::aboutDeveloperDialog;
+
 bool GUI::rowSelected = false;
 
 using namespace std::string_literals;
@@ -29,7 +33,7 @@ namespace MenuIds
     const int deleteDataId = 3;
 
     const int aboutProgramId = 4;
-    const int aboutDeveloperId = 4;
+    const int aboutDeveloperId = 5;
 }
 
 void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
@@ -71,7 +75,12 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     // Creating info menu
     wxMenu* infoMenu = new wxMenu();
     infoMenu->Append(MenuIds::aboutProgramId, "About program");
+    aboutProgramDialog = new AboutProgramDialog(mainWindow);
+    infoMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& event) { aboutProgramDialog->ShowModal(); }, MenuIds::aboutProgramId);
+    
     infoMenu->Append(MenuIds::aboutDeveloperId, "About developer");
+    aboutDeveloperDialog = new AboutDeveloperDialog(mainWindow);
+    infoMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& event) { aboutDeveloperDialog->ShowModal(); }, MenuIds::aboutDeveloperId);
 
     menuBar->Append(databaseMenu, "Database");
     menuBar->Append(infoMenu, "Info");
@@ -82,9 +91,9 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     panel = new wxPanel(mainWindow, wxID_ANY, wxDefaultPosition, mainWindow->GetSize());
     panel->SetBackgroundColour(wxColour(43, 43, 43, 255));
 
-    tablePanel = new wxPanel(panel, wxID_ANY, wxPoint(130, 30), wxSize(750, 350));
+    tablePanel = new wxPanel(panel, wxID_ANY, wxPoint(130, 10), wxSize(750, 350));
 
-    tableslistBox = new wxListBox(panel, wxID_ANY, wxPoint(0, 40), wxSize(125, 50));
+    tableslistBox = new wxListBox(panel, wxID_ANY, wxPoint(0, 20), wxSize(125, 50));
     
     //Getting all table names from database
     sqlite3_stmt* stmt = sqlController->PrepareSQL(R"(
@@ -106,7 +115,7 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
         // Getting column names from the table
         sqlite3_stmt* stmt1 = sqlController->PrepareSQL(("SELECT name FROM pragma_table_info(\'"s + tableName + "\')").c_str());
 
-        wxCheckListBox* checkListBox = new wxCheckListBox(panel, wxID_ANY, wxPoint(10, 100), wxSize(115, 150));
+        wxCheckListBox* checkListBox = new wxCheckListBox(panel, wxID_ANY, wxPoint(10, 80), wxSize(115, 125));
 
         // Creating checkboxes of column names
         while (sqlite3_step(stmt1) == SQLITE_ROW) {
@@ -148,37 +157,31 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
     checkBoxes.at(selectedTable)->Show();
 
     //Creating button that check all checkboxes
-    wxButton* checkAllButton = new wxButton(panel, wxID_ANY, "Check all", wxPoint(20, 260), wxSize(95, 25));
+    wxButton* checkAllButton = new wxButton(panel, wxID_ANY, "Check all", wxPoint(20, 215), wxSize(95, 25));
     checkAllButton->Bind(wxEVT_BUTTON, &GUI::OnCheckAllButtonClicked);
-    
-    // Creating update table button and handling event function
-    wxButton* updateTableButton = new wxButton(panel, wxID_ANY, "Update Table", wxPoint(145, 425), wxSize(100, 25));
-    updateTableButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event)
-        {
-            GUI::UpdateTable(selectedTable);
-        }
-    );
 
     // Creating add data button
-    wxButton* addDataButton = new wxButton(panel, wxID_ANY, "Add", wxPoint(145, 380), wxSize(75, 25));
+    wxButton* addDataButton = new wxButton(panel, wxID_ANY, "Add", wxPoint(145, 360), wxSize(75, 25));
     addDataButton->Bind(wxEVT_BUTTON, &GUI::OnAddDataButtonClicked);
 
     // Creating update data button
-    updateDataButton = new wxButton(panel, wxID_ANY, "Update", wxPoint(225, 380), wxSize(75, 25));
+    updateDataButton = new wxButton(panel, wxID_ANY, "Update", wxPoint(225, 360), wxSize(75, 25));
     updateDataButton->Bind(wxEVT_BUTTON, &GUI::OnUpdateDataButtonClicked);
     updateDataButton->Disable();
 
     // Creating delete data button
-    deleteDataButton = new wxButton(panel, wxID_ANY, "Delete", wxPoint(305, 380), wxSize(75, 25));
+    deleteDataButton = new wxButton(panel, wxID_ANY, "Delete", wxPoint(305, 360), wxSize(75, 25));
     deleteDataButton->Bind(wxEVT_BUTTON, &GUI::OnDeleteDataButtonClicked);
     deleteDataButton->Disable();
 
-    mainWindow->Show();
+    // Creating total info button
+    wxButton* totalInfoButton = new wxButton(panel, wxID_ANY, "Total", wxPoint(765, 360), wxSize(100, 25));
+    totalInfoButton->Bind(wxEVT_BUTTON, &GUI::OnTotalInfoButtonClicked);
 }
 
 void GUI::TableInit(const char* tableName)
 {
-    wxBoxSizer* vbox = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
     // Creating visual table
     wxDataViewListCtrl* table = new wxDataViewListCtrl(tablePanel, wxID_ANY);
@@ -210,11 +213,11 @@ void GUI::TableInit(const char* tableName)
     table->SetAlternateRowColour(wxColor(31, 31, 31, 255));
     table->SetForegroundColour(wxColor(*wxWHITE));
 
-    // Добавляем `wxDataViewListCtrl` в вертикальный бокс-сайзер
-    vbox->Add(table, 1, wxEXPAND | wxALL, 10);
+    // Add table to the vertical box-sizer
+    sizer->Add(table, 1, wxEXPAND | wxALL, 10);
 
-    // Устанавливаем бокс-сайзер для панели
-    tablePanel->SetSizer(vbox);
+    // Set the box sizer for the panel
+    tablePanel->SetSizer(sizer);
 
     tablePanel->Layout();
 
@@ -344,6 +347,9 @@ void GUI::OnAddDataButtonClicked(wxCommandEvent& event)
     AddDataDialog* addDataDialog = new AddDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
     addDataDialog->ShowModal();
     UpdateTable(selectedTable);
+
+    updateDataButton->Disable();
+    deleteDataButton->Disable();
 }
 
 void GUI::OnUpdateDataButtonClicked(wxCommandEvent& event)
@@ -397,6 +403,12 @@ void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
 
         rowSelected = false;
     }
+}
+
+void GUI::OnTotalInfoButtonClicked(wxCommandEvent& event)
+{
+    TotalInfoDialog* totalInfoDialog = new TotalInfoDialog(panel, sqlController);
+    totalInfoDialog->ShowModal();
 }
 
 void GUI::OnSelectionChanged(wxDataViewEvent& event)
@@ -637,4 +649,94 @@ void UpdateDataDialog::OnSave(wxCommandEvent& event)
     {
         wxLogError(exp.what().c_str());
     }
+}
+
+AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
+    : wxDialog(parent, wxID_ANY, "About program")
+{
+    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+
+    wxStaticText* text = new wxStaticText(this, wxID_ANY, "123123");
+
+    sizer->Add(text, wxALL | wxEXPAND, 5);
+
+    SetSizer(sizer);
+    sizer->Fit(this);
+    sizer->SetSizeHints(this);
+}
+
+AboutDeveloperDialog::AboutDeveloperDialog(wxWindow* parent)
+    : wxDialog(parent, wxID_ANY, "About developer")
+{
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+
+
+
+    SetSizer(sizer);
+    sizer->Fit(this);
+    sizer->SetSizeHints(this);
+}
+
+TotalInfoDialog::TotalInfoDialog(wxWindow* parent, SQLController* sqlController)
+    : wxDialog(parent, wxID_ANY, "Total information", wxDefaultPosition, wxSize(950, 500))
+{
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+    wxPanel* panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, GetSize());
+
+    wxDataViewListCtrl* table = new wxDataViewListCtrl(panel, wxID_ANY);
+
+    // Getting data from database
+    sqlite3_stmt* stmt = sqlController->PrepareSQL(R"(
+        SELECT
+            p.ProductID,
+            p.ProductName,
+            p.Description,
+            p.Price,
+            p.StockQuantity,
+            pc.CategoryName,
+            pc.AverageRating AS AverageCategoryRating,
+            m.Name AS ManufacturerName,
+            m.CountryOfOrigin,
+            m.WebsiteURL
+        FROM
+            Products p
+        JOIN
+            ProductCategories pc ON p.CategoryID = pc.CategoryID
+        JOIN
+            Manufacturers m ON p.ManufacturerID = m.ManufacturerID;
+    )"
+    );
+
+    // Adding column names to a table
+    for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+        wxString columnName = wxString::FromUTF8((char*)sqlite3_column_name(stmt, i));
+        wxDataViewColumn* column = table->AppendTextColumn(columnName);
+        column->SetMinWidth(columnName.Length() * 8); // Set a minimum width for the column
+    }
+
+    // Populating a table with database data
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        // Adding a new row to a table
+        wxVector<wxVariant> data;
+        for (int i = 0; i < sqlite3_column_count(stmt); ++i) {
+            data.push_back(wxVariant(wxString::FromUTF8((char*)sqlite3_column_text(stmt, i))));
+        }
+        table->AppendItem(data);
+    }
+
+    table->SetBackgroundColour(wxColor(31, 31, 31, 255));
+    table->SetAlternateRowColour(wxColor(31, 31, 31, 255));
+    table->SetForegroundColour(wxColor(*wxWHITE));
+
+    // Add table to the vertical box-sizer
+    sizer->Add(table, 1, wxEXPAND | wxALL, 10);
+
+    panel->SetSizer(sizer);
+
+    panel->Layout();
+
+    sqlite3_finalize(stmt);
 }

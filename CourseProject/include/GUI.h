@@ -9,6 +9,80 @@
 #include "SQLController.h"
 
 /// <summary>
+/// Implementation of the dialog box for adding data 
+/// </summary>
+class AddDataDialog : public wxDialog
+{
+private:
+
+	void OnSave(wxCommandEvent& event);
+
+	wxString selectedTable;
+
+	std::vector<wxTextCtrl*> formFields;
+
+	SQLController* sqlController;
+
+public:
+	AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table);
+};
+
+/// <summary>
+/// Implementation of the dialog box for updating data 
+/// </summary>
+class UpdateDataDialog : public wxDialog
+{
+private:
+
+	void OnSave(wxCommandEvent& event);
+
+	wxString selectedTable;
+
+	std::vector<wxTextCtrl*> formFields;
+
+	SQLController* sqlController;
+
+	wxDataViewListCtrl* table;
+
+	wxString selectedRowId;
+
+	wxString IdColumnName;
+
+public:
+	UpdateDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table);
+};
+
+/// <summary>
+/// Implementation of the about program dialog box 
+/// </summary>
+class AboutProgramDialog : public wxDialog
+{
+
+public:
+	AboutProgramDialog(wxWindow* parent);
+};
+
+/// <summary>
+/// Implementation of the about developer dialog box 
+/// </summary>
+class AboutDeveloperDialog : public wxDialog
+{
+
+public:
+	AboutDeveloperDialog(wxWindow* parent);
+};
+
+/// <summary>
+/// Implementation of the dialog box for adding data 
+/// </summary>
+class TotalInfoDialog : public wxDialog
+{
+
+public:
+	TotalInfoDialog(wxWindow* parent, SQLController* sqlController);
+};
+
+/// <summary>
 /// Implementation of a GUI(Graphical user interface)
 /// </summary>
 class GUI : public wxFrame
@@ -67,6 +141,12 @@ class GUI : public wxFrame
 	/// </summary>
 	/// <param name="event - event for handling"></param>
 	static void OnDeleteDataButtonClicked(wxCommandEvent& event);
+
+	/// <summary>
+	/// Handling an event when a total info button is clicked
+	/// </summary>
+	/// <param name="event"></param>
+	static void OnTotalInfoButtonClicked(wxCommandEvent& event);
 	
 	/// <summary>
 	/// Handling an event when a selection of the table's row is changed
@@ -93,6 +173,10 @@ class GUI : public wxFrame
 
 	static wxButton* deleteDataButton;
 
+	static AboutProgramDialog* aboutProgramDialog;
+
+	static AboutDeveloperDialog* aboutDeveloperDialog;
+
 	static bool rowSelected;
 
 	/// <summary>
@@ -108,48 +192,4 @@ public:
 	/// <param name="mainWindow - main window(wxFrame class object)"></param>
 	/// <param name="sqlController"></param>
 	static void MainWindowInit(wxFrame* mainWindow, SQLController* sqlController);
-};
-
-/// <summary>
-/// Implementation of the dialog box for adding data 
-/// </summary>
-class AddDataDialog : public wxDialog
-{
-private:
-
-	void OnSave(wxCommandEvent& event);
-
-    wxString selectedTable;
-
-    std::vector<wxTextCtrl*> formFields;
-
-    SQLController* sqlController;
-
-public:
-	AddDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table);
-};
-
-/// <summary>
-/// Implementation of the dialog box for updating data 
-/// </summary>
-class UpdateDataDialog : public wxDialog
-{
-private:
-
-	void OnSave(wxCommandEvent& event);
-
-	wxString selectedTable;
-
-	std::vector<wxTextCtrl*> formFields;
-
-	SQLController* sqlController;
-
-	wxDataViewListCtrl* table;
-
-	wxString selectedRowId;
-
-	wxString IdColumnName;
-
-public:
-	UpdateDataDialog(wxWindow* parent, SQLController* sqlController, wxString selectedTable, wxDataViewListCtrl* table);
 };
