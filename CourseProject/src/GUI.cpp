@@ -506,8 +506,9 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
         }
         else
         {
-            values += formFields[i]->GetValue();
-            if (values.compare(""))
+            wxString value = formFields[i]->GetValue();
+            values += value;
+            if (value.compare("") == 0)
             {
                 values += "0";
             }
@@ -634,8 +635,9 @@ void UpdateDataDialog::OnSave(wxCommandEvent& event)
         }
         else
         {
-            values += formFields[i]->GetValue();
-            if (values.compare(""))
+            wxString value = formFields[i]->GetValue();
+            values += value;
+            if (value.compare("") == 0)
             {
                 values += "0";
             }
@@ -722,7 +724,7 @@ AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
     
     addDataSizer->Add(addDataHeadline, 0, wxALL | wxALIGN_CENTER, 5);
 
-    addDataSizer->Add(new wxStaticText(aboutFunctionalPanel, wxID_ANY, "The method of adding data works as follows:\nClick on the \"Add\" button or the \"Ctrl-A\" key\ncombination. A dialog box opens with a form\nfor inserting a row into the table. Click the \"Save\"\nbutton to save the data.\n\nNote: Unique columns must be inscribed."), 0, wxALL | wxALIGN_LEFT, 5);
+    addDataSizer->Add(new wxStaticText(aboutFunctionalPanel, wxID_ANY, "The method of adding data works as follows:\nClick on the \"Add\" button or the \"Ctrl-A\" key\ncombination. A dialog box opens with a form\nfor inserting a row into the table. Click the \"Save\"\nbutton to save the data.\n\nNote: Unique columns must always be entered."), 0, wxALL | wxALIGN_LEFT, 5);
 
     // Loading update data image
     wxImage updateDataImage(wxT("img\\update_data.png"), wxBITMAP_TYPE_PNG);

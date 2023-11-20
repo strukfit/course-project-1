@@ -2,6 +2,7 @@
 
 #include <sqlite3.h>
 #include <fstream>
+#include <string>
 #include "Exception.h"
 
 /// <summary>

@@ -26,18 +26,39 @@ void SQLController::OpenDB(const char* filename)
 {
     if (sqlite3_open(filename, &db))
     {
-        throw(Exception("Can't open database: "s + sqlite3_errmsg(db)));
+        throw(Exception("Error in opening database: "s + sqlite3_errmsg(db)));
     }
 }
 
 void SQLController::ExecuteSQL(const char* sql)
 {
-    sqlite3_stmt* stmt;
+    if (sqlite3_exec(db, sql, 0, 0, nullptr) != SQLITE_OK)
+    {   
+        int errorCode = sqlite3_errcode(db);
+        std::string sqliteError = sqlite3_errmsg(db);
+        std::string columnName = "";
+        std::string error;
 
-    char* errMsg = 0;
-    if (sqlite3_exec(db, sql, 0, 0, nullptr) != SQLITE_OK) 
-    {
-        throw(Exception("Error when executing SQL query: "s + sqlite3_errmsg(db)));
+        if (errorCode == 19)
+        {
+            // Find the last occurrence of a space in the sqlite error
+            size_t lastSpace = sqliteError.find_last_of(' ');
+
+            // Equate error to the substring after the last space
+            columnName = sqliteError.substr(lastSpace + 1);
+
+            error = "The column " + columnName + " with this value already exists.";
+        }
+        else if (errorCode == 1)
+        {
+            error = "Some column has a different data type.";
+        }
+        else
+        {
+            error = sqliteError;
+        }
+        
+        throw(Exception("Error when executing SQL query: "s + error));
     }
 }
 
