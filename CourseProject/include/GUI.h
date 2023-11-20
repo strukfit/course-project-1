@@ -3,8 +3,8 @@
 #include <wx/wx.h>
 #include <wx/menu.h>
 #include <wx/checkbox.h>
-#include <wx/listctrl.h>
 #include <wx/dataview.h>
+#include <wx/notebook.h>
 #include <map>
 #include "SQLController.h"
 

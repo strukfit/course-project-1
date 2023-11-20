@@ -371,6 +371,14 @@ void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
 {
     if (rowSelected)
     {
+        if (wxMessageBox("Are you sure you want to delete the selected row?",
+            "Confirm action",
+            wxICON_QUESTION | wxYES_NO) != wxYES)
+        {
+            event.Skip();
+            return;
+        }
+
         wxDataViewListCtrl* table = tables.at(selectedTable);
 
         // Getting table selection 
@@ -499,6 +507,10 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
         else
         {
             values += formFields[i]->GetValue();
+            if (values.compare(""))
+            {
+                values += "0";
+            }
         }
 
         if (i < totalRows)
@@ -623,12 +635,15 @@ void UpdateDataDialog::OnSave(wxCommandEvent& event)
         else
         {
             values += formFields[i]->GetValue();
+            if (values.compare(""))
+            {
+                values += "0";
+            }
         }
 
         if (i < totalRows)
         {
             values += ", ";
-
         }
         i++;
     }
@@ -654,12 +669,127 @@ void UpdateDataDialog::OnSave(wxCommandEvent& event)
 AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
     : wxDialog(parent, wxID_ANY, "About program")
 {
-    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    wxNotebook* notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxSize(825, 400), wxNB_FIXEDWIDTH);
 
-    wxStaticText* text = new wxStaticText(this, wxID_ANY, "123123");
+    // Creating the first tab
+    wxPanel* aboutProgramPanel = new wxPanel(notebook);
 
-    sizer->Add(text, wxALL | wxEXPAND, 5);
+    wxBoxSizer* vSizer1 = new wxBoxSizer(wxVERTICAL);
 
+    wxStaticText* headline = new wxStaticText(aboutProgramPanel, wxID_ANY, "Household Appliances Store");
+    wxFont font = headline->GetFont();
+    font.MakeBold();
+    font.SetPointSize(15);
+    headline->SetFont(font);
+
+    vSizer1->AddStretchSpacer();
+    vSizer1->Add(headline, 0, wxALIGN_CENTRE | wxALL, 5);
+    vSizer1->Add(new wxStaticText(aboutProgramPanel, wxID_ANY, "A software product for working with a file database of household appliances store products"), 0, wxALIGN_CENTRE | wxALL, 5);
+    vSizer1->Add(new wxStaticText(aboutProgramPanel, wxID_ANY, "Portable version"), 0, wxALIGN_CENTRE | wxALL, 10);
+    vSizer1->Add(new wxStaticText(aboutProgramPanel, wxID_ANY, "Author and developer:"), 0, wxALIGN_CENTRE | wxALL, 5);
+    vSizer1->Add(new wxStaticText(aboutProgramPanel, wxID_ANY, "Borysenko Rostyslav Vitaliyovych, HNEU student"), 0, wxALIGN_CENTRE | wxALL, 5);
+    vSizer1->AddStretchSpacer();
+
+    aboutProgramPanel->SetSizer(vSizer1);
+
+    // Adding the first tab to Notepad
+    notebook->AddPage(aboutProgramPanel, "About program");
+
+    // Creating the second tab
+    wxPanel* aboutFunctionalPanel = new wxPanel(notebook);
+    
+    wxBoxSizer* hSizer2 = new wxBoxSizer(wxHORIZONTAL);
+
+    wxInitAllImageHandlers();
+
+    // Loading add data image
+    wxImage addDataImage(wxT("img\\add_data.png"), wxBITMAP_TYPE_PNG);
+    wxBitmap* bitmap = new wxBitmap(addDataImage);
+
+    // Creating a static element to display the image
+    wxStaticBitmap* addDataImageBitmap = new wxStaticBitmap(aboutFunctionalPanel, wxID_ANY, *bitmap);
+
+    wxBoxSizer* addDataSizer = new wxBoxSizer(wxVERTICAL);
+
+    addDataSizer->Add(addDataImageBitmap, 0, wxALL | wxALIGN_CENTER);
+
+    wxStaticText* addDataHeadline = new wxStaticText(aboutFunctionalPanel, wxID_ANY, "Add data(Ctrl-A)");
+
+    wxFont headlineFont = addDataHeadline->GetFont();
+    headlineFont.MakeBold();
+    headlineFont.SetPointSize(14);
+    addDataHeadline->SetFont(headlineFont);
+    
+    addDataSizer->Add(addDataHeadline, 0, wxALL | wxALIGN_CENTER, 5);
+
+    addDataSizer->Add(new wxStaticText(aboutFunctionalPanel, wxID_ANY, "The method of adding data works as follows:\nClick on the \"Add\" button or the \"Ctrl-A\" key\ncombination. A dialog box opens with a form\nfor inserting a row into the table. Click the \"Save\"\nbutton to save the data.\n\nNote: Unique columns must be inscribed."), 0, wxALL | wxALIGN_LEFT, 5);
+
+    // Loading update data image
+    wxImage updateDataImage(wxT("img\\update_data.png"), wxBITMAP_TYPE_PNG);
+    bitmap = new wxBitmap(updateDataImage);
+
+    // Creating a static element to display the image
+    wxStaticBitmap* updateDataImageBitmap = new wxStaticBitmap(aboutFunctionalPanel, wxID_ANY, *bitmap);
+    
+    wxBoxSizer* updateDataSizer = new wxBoxSizer(wxVERTICAL);
+
+    updateDataSizer->Add(updateDataImageBitmap, 0, wxALL | wxALIGN_CENTER);
+
+    wxStaticText* updateDataHeadline = new wxStaticText(aboutFunctionalPanel, wxID_ANY, "Update data(Ctrl-U)");
+
+    updateDataHeadline->SetFont(headlineFont);
+
+    updateDataSizer->Add(updateDataHeadline, 0, wxALL | wxALIGN_CENTER, 5);
+
+    updateDataSizer->Add(new wxStaticText(aboutFunctionalPanel, wxID_ANY, "The data update method works as follows:\nSelect the row in which you want to update\nthe data. Click the \"Update\" button or press\nthe \"Ctrl-U\" key combination. A dialog box\nwith the data update form opens. Click on\nthe \"Save\" button to save the data.\n\nNote: Unique columns must always be entered."), 0, wxALL | wxALIGN_LEFT, 5);
+
+    // Loading delete data image
+    wxImage deleteDataImage(wxT("img\\delete_data.png"), wxBITMAP_TYPE_PNG);
+    bitmap = new wxBitmap(deleteDataImage);
+
+    // Creating a static element to display the image
+    wxStaticBitmap* deleteDataImageBitmap = new wxStaticBitmap(aboutFunctionalPanel, wxID_ANY, *bitmap);
+
+    wxBoxSizer* deleteDataSizer = new wxBoxSizer(wxVERTICAL);
+
+    deleteDataSizer->Add(deleteDataImageBitmap, 0, wxALL | wxALIGN_CENTER);
+
+    wxStaticText* deleteDataHeadline = new wxStaticText(aboutFunctionalPanel, wxID_ANY, "Delete data(Del)");
+
+    deleteDataHeadline->SetFont(headlineFont);
+
+    deleteDataSizer->Add(deleteDataHeadline, 0, wxALL | wxALIGN_CENTER, 5);
+
+    deleteDataSizer->Add(new wxStaticText(aboutFunctionalPanel, wxID_ANY, "The method for deleting data works as follows:\nSelect the row in which you want to delete data.\nPress the \"Delete\" button or the \"Del\" key.\nConfirm the action in the dialog box."), 0, wxALL | wxALIGN_LEFT, 5);
+
+    hSizer2->Add(addDataSizer, 0, wxALL | wxEXPAND, 5);
+
+    hSizer2->Add(updateDataSizer, 0, wxALL | wxEXPAND, 5);
+
+    hSizer2->Add(deleteDataSizer, 0, wxALL | wxEXPAND, 5);
+
+    wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+
+    mainSizer->AddStretchSpacer();
+
+    mainSizer->Add(hSizer2, 0, wxALL | wxEXPAND, 0);
+
+    mainSizer->AddStretchSpacer();
+    
+    aboutFunctionalPanel->SetSizer(mainSizer);
+
+    // Adding the second tab to Notepad
+    notebook->AddPage(aboutFunctionalPanel, "Functional");
+
+    // Creating close button 
+    wxButton* closeButton = new wxButton(this, wxID_CLOSE, "Close", wxDefaultPosition, wxSize(95, 25));
+    closeButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) { EndModal(wxID_CLOSE); });
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+    sizer->Add(notebook, 0, wxALL | wxEXPAND, 10);
+    sizer->Add(closeButton, 0, wxALL | wxALIGN_RIGHT, 10);
+    
     SetSizer(sizer);
     sizer->Fit(this);
     sizer->SetSizeHints(this);
@@ -668,10 +798,51 @@ AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
 AboutDeveloperDialog::AboutDeveloperDialog(wxWindow* parent)
     : wxDialog(parent, wxID_ANY, "About developer")
 {
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* hSizer = new wxBoxSizer(wxHORIZONTAL);
 
+    wxBoxSizer* vSizer = new wxBoxSizer(wxVERTICAL);
 
+    static wxStaticText* text = new wxStaticText(this, wxID_ANY, "Developer: Borysenko Rostyslav Vitaliyovych");
+
+    wxFont font = text->GetFont();
+    font.SetPointSize(17);
+    text->SetFont(font);
+
+    vSizer->Add(text, 0, wxALL | wxEXPAND, 10);
+
+    text = new wxStaticText(this, wxID_ANY, "Employment: Student");
+    text->SetFont(font);
+    vSizer->Add(text, 0, wxALL | wxEXPAND, 10);
+
+    text = new wxStaticText(this, wxID_ANY, "Place of study: HNEU");
+    text->SetFont(font);
+    vSizer->Add(text, 0, wxALL | wxEXPAND, 10);
+
+    text = new wxStaticText(this, wxID_ANY, "E-mail: rostyslavborysenko04@gmail.com");
+    text->SetFont(font);
+    vSizer->Add(text, 0, wxALL | wxEXPAND, 10);
+
+    wxInitAllImageHandlers();
+
+    // Loading the developer's image
+    wxImage image(wxT("img\\developer.jpg"), wxBITMAP_TYPE_JPEG);
+    image.Rescale(246, 300, wxIMAGE_QUALITY_HIGH);
+    wxBitmap bitmap(image);
+
+    // Creating a static element to display the image
+    wxStaticBitmap* developerImage = new wxStaticBitmap(this, wxID_ANY, bitmap);
+
+    // Creating close button 
+    wxButton* closeButton = new wxButton(this, wxID_CLOSE, "Close", wxDefaultPosition, wxSize(95, 25));
+    closeButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) { EndModal(wxID_CLOSE); });
+
+    hSizer->Add(vSizer, 0, wxALL | wxCENTER, 5);
+    hSizer->Add(developerImage, 0, wxALL | wxEXPAND, 50);
+
+    sizer->Add(hSizer, 0, wxALL | wxCENTER, 0);
+    sizer->Add(closeButton, 0, wxALL | wxALIGN_RIGHT, 10);
 
     SetSizer(sizer);
     sizer->Fit(this);
@@ -731,8 +902,13 @@ TotalInfoDialog::TotalInfoDialog(wxWindow* parent, SQLController* sqlController)
     table->SetAlternateRowColour(wxColor(31, 31, 31, 255));
     table->SetForegroundColour(wxColor(*wxWHITE));
 
-    // Add table to the vertical box-sizer
+    // Creating close button 
+    wxButton* closeButton = new wxButton(panel, wxID_CLOSE, "Close", wxDefaultPosition, wxSize(95, 25));
+    closeButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& event) { EndModal(wxID_CLOSE); });
+
+    // Add the table and close button to the vertical box-sizer
     sizer->Add(table, 1, wxEXPAND | wxALL, 10);
+    sizer->Add(closeButton, 0, wxALL | wxALIGN_RIGHT, 10);
 
     panel->SetSizer(sizer);
 

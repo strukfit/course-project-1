@@ -22,6 +22,10 @@ target_link_libraries(HouseholdAppliancesStore PRIVATE unofficial::sqlite3::sqli
 
 target_include_directories(HouseholdAppliancesStore PRIVATE "include")
 
+set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/img)
+set(DESTINATION_DIR ${CMAKE_BINARY_DIR}/CourseProject)
+file(COPY ${SOURCE_DIR} DESTINATION ${DESTINATION_DIR})
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HouseholdAppliancesStore PROPERTY CXX_STANDARD 20)
 endif()
