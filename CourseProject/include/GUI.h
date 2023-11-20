@@ -19,7 +19,7 @@ private:
 
 	wxString selectedTable;
 
-	std::vector<wxTextCtrl*> formFields;
+	std::vector<wxTextCtrl*> formFields; // Stores form fields data
 
 	SQLController* sqlController;
 
@@ -38,7 +38,7 @@ private:
 
 	wxString selectedTable;
 
-	std::vector<wxTextCtrl*> formFields;
+	std::vector<wxTextCtrl*> formFields; // Stores form fields data
 
 	SQLController* sqlController;
 
@@ -173,9 +173,9 @@ class GUI : public wxFrame
 
 	static wxButton* deleteDataButton;
 
-	static AboutProgramDialog* aboutProgramDialog;
+	static AboutProgramDialog* aboutProgramDialog; // Stores about program dialog box
 
-	static AboutDeveloperDialog* aboutDeveloperDialog;
+	static AboutDeveloperDialog* aboutDeveloperDialog; // Stores about developer dialog box
 
 	static bool rowSelected;
 

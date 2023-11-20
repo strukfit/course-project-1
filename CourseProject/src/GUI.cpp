@@ -26,6 +26,9 @@ bool GUI::rowSelected = false;
 
 using namespace std::string_literals;
 
+/// <summary>
+/// Menu bar buttons id
+/// </summary>
 namespace MenuIds
 {
     const int addDataId = 1;
@@ -277,6 +280,7 @@ void GUI::OnCheckBoxToggled(wxCommandEvent& event)
 
     int id = event.GetInt();
 
+    // Showing or hiding a column when checkbox is toggled
     wxDataViewListCtrl* table = tables.at(selectedTable);
     table->GetColumn(id)->SetHidden(!checkListBox->IsChecked(id));
 
@@ -288,6 +292,8 @@ void GUI::OnCheckBoxToggled(wxCommandEvent& event)
 void GUI::OnCheckAllButtonClicked(wxCommandEvent& event)
 {
     wxCheckListBox* checkListBox = checkBoxes.at(selectedTable);
+
+    // Showing all columns
     for (int i = 0; i < checkListBox->GetCount(); i++)
     {
         checkListBox->Check(i);
@@ -344,6 +350,7 @@ void GUI::OnListBoxSelect(wxCommandEvent& event)
 
 void GUI::OnAddDataButtonClicked(wxCommandEvent& event)
 {
+    // Creating and showing add data dialog box
     AddDataDialog* addDataDialog = new AddDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
     addDataDialog->ShowModal();
     UpdateTable(selectedTable);
@@ -356,6 +363,7 @@ void GUI::OnUpdateDataButtonClicked(wxCommandEvent& event)
 {
     if (rowSelected)
     {
+        // Creating and showing update data dialog box
         UpdateDataDialog* updateDataDialog = new UpdateDataDialog(panel, sqlController, selectedTable, tables.at(selectedTable));
         updateDataDialog->ShowModal();
         UpdateTable(selectedTable);
@@ -371,6 +379,7 @@ void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
 {
     if (rowSelected)
     {
+        // Creating confirmation dialog box
         if (wxMessageBox("Are you sure you want to delete the selected row?",
             "Confirm action",
             wxICON_QUESTION | wxYES_NO) != wxYES)
@@ -415,6 +424,7 @@ void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
 
 void GUI::OnTotalInfoButtonClicked(wxCommandEvent& event)
 {
+    // Creating and showing total information dialog box
     TotalInfoDialog* totalInfoDialog = new TotalInfoDialog(panel, sqlController);
     totalInfoDialog->ShowModal();
 }
@@ -495,7 +505,7 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
 
     int i = 0;
     
-    // Creating statement like value1, value2..."
+    // Creating statement like "value1, value2..."
     while (sqlite3_step(stmt) == SQLITE_ROW) {
 
         const char* type = (char*)sqlite3_column_text(stmt, 0);
@@ -678,7 +688,10 @@ AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
 
     wxBoxSizer* vSizer1 = new wxBoxSizer(wxVERTICAL);
 
+    // Adding program information
     wxStaticText* headline = new wxStaticText(aboutProgramPanel, wxID_ANY, "Household Appliances Store");
+
+    // Changing headline font size
     wxFont font = headline->GetFont();
     font.MakeBold();
     font.SetPointSize(15);
@@ -715,8 +728,10 @@ AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
 
     addDataSizer->Add(addDataImageBitmap, 0, wxALL | wxALIGN_CENTER);
 
+    // Adding information about add data function
     wxStaticText* addDataHeadline = new wxStaticText(aboutFunctionalPanel, wxID_ANY, "Add data(Ctrl-A)");
 
+    // Changing headline font size and making it bold
     wxFont headlineFont = addDataHeadline->GetFont();
     headlineFont.MakeBold();
     headlineFont.SetPointSize(14);
@@ -733,6 +748,7 @@ AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
     // Creating a static element to display the image
     wxStaticBitmap* updateDataImageBitmap = new wxStaticBitmap(aboutFunctionalPanel, wxID_ANY, *bitmap);
     
+    // Adding information about update data function
     wxBoxSizer* updateDataSizer = new wxBoxSizer(wxVERTICAL);
 
     updateDataSizer->Add(updateDataImageBitmap, 0, wxALL | wxALIGN_CENTER);
@@ -752,6 +768,7 @@ AboutProgramDialog::AboutProgramDialog(wxWindow* parent)
     // Creating a static element to display the image
     wxStaticBitmap* deleteDataImageBitmap = new wxStaticBitmap(aboutFunctionalPanel, wxID_ANY, *bitmap);
 
+    // Adding information about delete data function
     wxBoxSizer* deleteDataSizer = new wxBoxSizer(wxVERTICAL);
 
     deleteDataSizer->Add(deleteDataImageBitmap, 0, wxALL | wxALIGN_CENTER);
@@ -806,8 +823,10 @@ AboutDeveloperDialog::AboutDeveloperDialog(wxWindow* parent)
 
     wxBoxSizer* vSizer = new wxBoxSizer(wxVERTICAL);
 
+    // Adding developer information
     static wxStaticText* text = new wxStaticText(this, wxID_ANY, "Developer: Borysenko Rostyslav Vitaliyovych");
 
+    // Changing the font size
     wxFont font = text->GetFont();
     font.SetPointSize(17);
     text->SetFont(font);

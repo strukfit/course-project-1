@@ -55,6 +55,4 @@ public:
     /// <param name="tableName"></param>
     /// <returns>sqlite3_stmt* stmt - prepared SQL query</returns>
     sqlite3_stmt* SelectData(const char* tableName);
-
-    void Test();
 };
