@@ -11,22 +11,22 @@ else()
     message(FATAL_ERROR "This script is designed for Windows only.")
 endif()
 
-# Указываем переменную с путем к иконке
+# Specify a variable with the path to the icon
 set(ICON_PATH ${CMAKE_SOURCE_DIR}/img/icon.ico)
 
 # Add source to this project's executable.
 add_executable (HouseholdAppliancesStore WIN32 ${SOURCES} "src/GUI.cpp" "include/GUI.h" "src/SQLController.cpp" "include/SQLController.h" "src/MainWindow.cpp" "include/MainWindow.h" "src/Exception.cpp" "include/Exception.h")
 
-# Указываем свойства для добавления иконки
+# Specify properties for adding an icon
 set_target_properties(HouseholdAppliancesStore PROPERTIES WIN32_EXECUTABLE TRUE)
 set_target_properties(HouseholdAppliancesStore PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 #set_target_properties(HouseholdAppliancesStore PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 
-# Устанавливаем ссылку на иконку
+# Set a link to the icon
 set(RESOURCES ${CMAKE_SOURCE_DIR}/resources.rc)
 file(WRITE ${RESOURCES} "IDI_ICON1 ICON DISCARDABLE \"${ICON_PATH}\"\n")
 
-# Указываем иконку в проекте
+# Specify the icon in the project
 target_sources(HouseholdAppliancesStore PRIVATE ${RESOURCES})
 
 find_package(wxWidgets REQUIRED gl core base OPTIONAL_COMPONENTS net)
@@ -46,3 +46,25 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 # TODO: Add tests and install targets if needed.
+
+# Project version
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+
+# Determine the package type (in this case, NSIS - for Windows)
+set(CPACK_GENERATOR NSIS)
+
+# Set up package meta information
+set(CPACK_PACKAGE_NAME "HouseholdAppliancesStore")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A software product for working with a file database of household appliances store products.")
+set(CPACK_PACKAGE_VENDOR "Borysenko Rostyslav Vitaliyovych")
+
+# Specify which files to include in the package
+install(TARGETS HouseholdAppliancesStore DESTINATION .)
+install(DIRECTORY ${SOURCE_DIR} DESTINATION .)
+file(GLOB DLL_FILES ${DESTINATION_DIR}/*.dll)
+install(FILES ${DLL_FILES} DESTINATION .)
+
+# Enable CPack after all settings
+include(CPack)
