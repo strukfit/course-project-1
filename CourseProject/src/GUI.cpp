@@ -543,8 +543,7 @@ void AddDataDialog::OnSave(wxCommandEvent& event)
 
     try 
     {
-       sqlController->ExecuteSQL(("INSERT INTO "s + selectedTable + " VALUES(" + values + ")").ToUTF8());
-
+       sqlController->ExecuteSQL(("PRAGMA foreign_keys = ON; INSERT INTO "s + selectedTable + " VALUES(" + values + ")").ToUTF8());
        // Close the window after saving
        EndModal(wxID_OK);
 
@@ -671,7 +670,7 @@ void UpdateDataDialog::OnSave(wxCommandEvent& event)
 
     try
     {
-        sqlController->ExecuteSQL(("UPDATE "s + selectedTable + " SET " + values + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
+        sqlController->ExecuteSQL(("PRAGMA foreign_keys = ON; UPDATE "s + selectedTable + " SET " + values + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
 
         // Close the window after saving
         EndModal(wxID_OK);

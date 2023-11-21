@@ -39,7 +39,7 @@ void SQLController::ExecuteSQL(const char* sql)
         std::string columnName = "";
         std::string error;
 
-        if (errorCode == 19)
+        if (errorCode == 19 && sqliteError != "FOREIGN KEY constraint failed")
         {
             // Find the last occurrence of a space in the sqlite error
             size_t lastSpace = sqliteError.find_last_of(' ');
@@ -77,6 +77,8 @@ sqlite3_stmt* SQLController::PrepareSQL(const char* sql)
 void SQLController::DatabaseInit()
 {
     ExecuteSQL(R"(
+        PRAGMA foreign_keys = ON;
+
         CREATE TABLE IF NOT EXISTS Products (
             ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
             ProductName TEXT NOT NULL UNIQUE,
@@ -85,8 +87,8 @@ void SQLController::DatabaseInit()
             StockQuantity INTEGER,
             CategoryID INTEGER,
             ManufacturerID INTEGER,
-            FOREIGN KEY (CategoryID) REFERENCES ProductCategories(CategoryID),
-            FOREIGN KEY (ManufacturerID) REFERENCES Manufacturers(ManufacturerID)
+            FOREIGN KEY (CategoryID) REFERENCES ProductCategories(CategoryID) ON DELETE RESTRICT,
+            FOREIGN KEY (ManufacturerID) REFERENCES Manufacturers(ManufacturerID) ON DELETE RESTRICT
         );
 
         CREATE TABLE IF NOT EXISTS ProductCategories (
