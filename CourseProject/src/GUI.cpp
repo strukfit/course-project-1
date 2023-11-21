@@ -61,6 +61,12 @@ void GUI::MainWindowInit(wxFrame* mainWindow, SQLController* sql)
         }
     );
 
+    // Load an icon from a file
+    wxIcon icon("img/icon.ico", wxBITMAP_TYPE_ICO);
+
+    // Set an icon for the window
+    mainWindow->SetIcon(icon);
+
     // Creating menu bar
     wxMenuBar* menuBar = new wxMenuBar();
 

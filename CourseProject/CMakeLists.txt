@@ -11,8 +11,23 @@ else()
     message(FATAL_ERROR "This script is designed for Windows only.")
 endif()
 
+# Указываем переменную с путем к иконке
+set(ICON_PATH ${CMAKE_SOURCE_DIR}/img/icon.ico)
+
 # Add source to this project's executable.
-add_executable (HouseholdAppliancesStore WIN32 ${SOURCES}  "src/GUI.cpp" "include/GUI.h" "src/SQLController.cpp" "include/SQLController.h" "src/MainWindow.cpp" "include/MainWindow.h" "src/Exception.cpp" "include/Exception.h")
+add_executable (HouseholdAppliancesStore WIN32 ${SOURCES} "src/GUI.cpp" "include/GUI.h" "src/SQLController.cpp" "include/SQLController.h" "src/MainWindow.cpp" "include/MainWindow.h" "src/Exception.cpp" "include/Exception.h")
+
+# Указываем свойства для добавления иконки
+set_target_properties(HouseholdAppliancesStore PROPERTIES WIN32_EXECUTABLE TRUE)
+set_target_properties(HouseholdAppliancesStore PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+#set_target_properties(HouseholdAppliancesStore PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
+
+# Устанавливаем ссылку на иконку
+set(RESOURCES ${CMAKE_SOURCE_DIR}/resources.rc)
+file(WRITE ${RESOURCES} "IDI_ICON1 ICON DISCARDABLE \"${ICON_PATH}\"\n")
+
+# Указываем иконку в проекте
+target_sources(HouseholdAppliancesStore PRIVATE ${RESOURCES})
 
 find_package(wxWidgets REQUIRED gl core base OPTIONAL_COMPONENTS net)
 include(${wxWidgets_USE_FILE})
