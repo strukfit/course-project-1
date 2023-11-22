@@ -413,7 +413,7 @@ void GUI::OnDeleteDataButtonClicked(wxCommandEvent& event)
 
         try
         {
-            sqlController->ExecuteSQL(("DELETE FROM "s + selectedTable + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
+            sqlController->ExecuteSQL(("PRAGMA foreign_keys = ON; DELETE FROM "s + selectedTable + " WHERE " + IdColumnName + " = " + selectedRowId).ToUTF8());
         }
         catch (Exception& exp)
         {
